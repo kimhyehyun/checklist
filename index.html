@@ -267,7 +267,10 @@
       padding: 2px 8px; flex-shrink: 0; white-space: nowrap;
       margin-left: auto;
     }
+    #editInputRow { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+    #editInputRow #editItemInput { margin-bottom: 0; flex: 1; }
     #editStoreRow { margin-bottom: 10px; }
+    #editFloorRow { display: flex; gap: 6px; flex-shrink: 0; }
     #inputRow { display: flex; align-items: center; gap: 8px; }
     #newItemInput {
       flex: 1; min-width: 0; height: 54px; background: var(--card-2); border: none;
@@ -588,30 +591,37 @@
     #resetDialogOverlay.show { opacity: 1; }
     .reset-dialog {
       background: var(--raised); border-radius: var(--r-lg) var(--r-lg) 0 0;
-      padding: 20px 20px calc(28px + env(safe-area-inset-bottom, 0px));
+      padding: 0 16px calc(24px + env(safe-area-inset-bottom, 0px));
       width: 100%; transform: translateY(40px); transition: transform .22s ease;
     }
     #resetDialogOverlay.show .reset-dialog { transform: translateY(0); }
-    .reset-dialog::before {
-      content: ''; display: block; width: 36px; height: 4px;
-      background: var(--sep); border-radius: var(--r-pill); margin: 0 auto 20px;
+    .reset-sheet-bar {
+      width: 36px; height: 4px; background: var(--sep);
+      border-radius: var(--r-pill); margin: 16px auto 20px;
     }
     .reset-dialog h3 {
-      font-family: var(--f-d); font-size: 20px; font-weight: 600;
-      color: var(--label); letter-spacing: -0.374px; margin-bottom: 8px;
+      font-family: var(--f-d); font-size: 20px; font-weight: 700;
+      color: var(--label); letter-spacing: -0.374px; margin-bottom: 16px;
+      padding: 0 4px;
     }
-    .reset-dialog p {
-      font-size: 15px; color: var(--label-2);
-      letter-spacing: -0.224px; line-height: 1.5; margin-bottom: 20px;
+    .reset-options { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+    .reset-option-btn {
+      display: flex; align-items: center; gap: 14px;
+      width: 100%; padding: 16px; border: none; border-radius: var(--r-lg);
+      background: var(--card); cursor: pointer; text-align: left;
     }
-    .dialog-btns { display: flex; gap: 8px; }
-    .dialog-btns button {
-      flex: 1; height: 50px; border: none; border-radius: var(--r-pill);
-      font-family: var(--f-t); font-size: 17px; cursor: pointer;
+    .reset-option-btn:active { background: var(--card-2); }
+    .reset-opt-icon { font-size: 24px; flex-shrink: 0; }
+    .reset-opt-text { display: flex; flex-direction: column; gap: 3px; flex: 1; }
+    .reset-opt-title { font-size: 16px; font-weight: 600; color: var(--label); }
+    .reset-opt-desc  { font-size: 12px; color: var(--label-3); }
+    .reset-opt-arrow { font-size: 13px; color: var(--label-4); flex-shrink: 0; }
+    .reset-cancel-btn {
+      width: 100%; height: 50px; border: none; border-radius: var(--r-pill);
+      background: var(--card-2); color: var(--label-2);
+      font-family: var(--f-t); font-size: 16px; cursor: pointer; margin-top: 4px;
     }
-    .dialog-btns button:active { transform: scale(0.95); }
-    .btn-cancel  { background: var(--card-2); color: var(--label); }
-    .btn-confirm { background: var(--blue); color: #fff; }
+    .reset-cancel-btn:active { opacity: .7; }
 
     /* ══════════════════════════════════════════
        ADD LIST SHEET
@@ -743,7 +753,7 @@
       width: 100%; height: 48px; background: var(--card-2); border: none;
       border-radius: var(--r-md); padding: 0 16px;
       font-family: var(--f-t); font-size: 17px; color: var(--label);
-      letter-spacing: -0.374px; outline: none; margin-bottom: 12px;
+      letter-spacing: -0.374px; outline: none; margin-bottom: 0;
     }
     #editItemInput:focus { background: var(--card); }
     #editTimeRow {
@@ -1300,12 +1310,35 @@
   <!-- ═══ RESET DIALOG ═══ -->
   <div id="resetDialogOverlay" onclick="onResetOverlayClick(event)">
     <div class="reset-dialog">
-      <h3>새 장보기 시작</h3>
-      <p>오늘 구매 기록을 저장하고<br>기본 물품을 다시 불러올까요?</p>
-      <div class="dialog-btns">
-        <button class="btn-cancel" onclick="hideResetDialog()">취소</button>
-        <button class="btn-confirm" onclick="doReset()">저장 후 시작</button>
+      <div class="reset-sheet-bar"></div>
+      <h3>어떻게 시작할까요?</h3>
+      <div class="reset-options">
+        <button class="reset-option-btn" id="resetOptLast" onclick="doReset('last')">
+          <span class="reset-opt-icon">🕐</span>
+          <div class="reset-opt-text">
+            <span class="reset-opt-title">지난번 그대로</span>
+            <span class="reset-opt-desc" id="resetOptLastDesc">마지막 장보기 목록 불러오기</span>
+          </div>
+          <i class="icon-arrow-right reset-opt-arrow"></i>
+        </button>
+        <button class="reset-option-btn" onclick="doReset('defaults')">
+          <span class="reset-opt-icon">⭐</span>
+          <div class="reset-opt-text">
+            <span class="reset-opt-title">자주 사는 기본 목록</span>
+            <span class="reset-opt-desc">물, 쫄이간식 등 고정 멤버</span>
+          </div>
+          <i class="icon-arrow-right reset-opt-arrow"></i>
+        </button>
+        <button class="reset-option-btn" onclick="doReset('empty')">
+          <span class="reset-opt-icon">🗒️</span>
+          <div class="reset-opt-text">
+            <span class="reset-opt-title">빈 목록으로 시작</span>
+            <span class="reset-opt-desc">직접 추가하며 시작</span>
+          </div>
+          <i class="icon-arrow-right reset-opt-arrow"></i>
+        </button>
       </div>
+      <button class="reset-cancel-btn" onclick="hideResetDialog()">취소</button>
     </div>
   </div>
 
@@ -1322,8 +1355,14 @@
   <div id="editOverlay" onclick="onEditOverlayClick(event)">
     <div id="editSheet">
       <div id="editSheetTitle">수정</div>
-      <input id="editItemInput" type="text"
-        onkeydown="if(event.key==='Enter') confirmEdit()" />
+      <div id="editInputRow">
+        <input id="editItemInput" type="text"
+          onkeydown="if(event.key==='Enter') confirmEdit()" />
+        <div id="editFloorRow" style="display:none">
+          <button class="floor-chip" id="editFloor1F" onclick="setEditFloor('1F')">1F</button>
+          <button class="floor-chip active" id="editFloorB1" onclick="setEditFloor('B1')">B1</button>
+        </div>
+      </div>
       <div id="editTimeRow">
         <input id="editTimeInput" type="time" />
         <button id="editTimeClearBtn" onclick="document.getElementById('editTimeInput').value=''">삭제</button>
@@ -1466,7 +1505,7 @@ const COLOR_SET   = ['#2a1c3a','#1c3a5e','#3a2a1c','#1c3a2a','#3a1c1c','#1c1c3a'
 
 const INITIAL_LISTS = [
   { id:'costco',   name:'코스트코 장보기', icon:'🛒', color:'#1c3a5e', type:'routine',
-    categories:['1F','B1'], items: COSTCO_DEFAULTS.map(i=>({...i, checked:false})) },
+    categories:['1F','B1'], items: [] },
   { id:'delivery', name:'택배 올 것',    icon:'📦', color:'#3a2a1c', type:'general', items:[] },
   { id:'shopping', name:'쇼핑하기',      icon:'🛍', color:'#1c3a2a', type:'general', items:[] },
   { id:'todo',     name:'할 일',         icon:'📝', color:'#2a1c3a', type:'general', items:[] },
@@ -1484,6 +1523,12 @@ let lists = [
   }),
   ..._stored.filter(l => l && l.id && !INITIAL_LISTS.some(i => i.id === l.id)),
 ];
+// 코스트코 빈 화면 UX 마이그레이션 (1회)
+if (!localStorage.getItem('costco-empty-migrated')) {
+  const c = lists.find(l => l.id === 'costco');
+  if (c) c.items = [];
+  localStorage.setItem('costco-empty-migrated', '1');
+}
 localStorage.setItem('cl-lists', JSON.stringify(lists));
 let costcoHistory  = JSON.parse(localStorage.getItem('costco-history') || '[]');
 let currentListId  = null;
@@ -1887,6 +1932,7 @@ function openList(id) {
     document.getElementById('dtab1').querySelector('.dtab-label').textContent = '히스토리';
     document.getElementById('floorSelector').style.display = 'flex';
     document.getElementById('suggestBar').style.display = 'none';
+    document.getElementById('todoTimeWrap').style.display = 'none';
     document.getElementById('storeRow').style.display = 'none';
     document.getElementById('outfitWeekNav').style.display = 'none';
     document.getElementById('detailInputBar').style.display = '';
@@ -1987,8 +2033,8 @@ function renderRoutineContent(list) {
   if (!unchecked.length && !checked.length) {
     el.innerHTML = `<div class="empty-state">
       <div class="empty-emoji">🛒</div>
-      <div class="empty-title">모두 카트에 담았어요</div>
-      <div class="empty-body">담은 항목을 확인하거나<br>새 장보기를 시작하세요.</div>
+      <div class="empty-title">장보기 목록이 없어요</div>
+      <div class="empty-body">위에 <b style="color:var(--blue)">새 장보기 시작</b>을 눌러<br>지난번 목록 또는 기본 목록을 불러오세요.</div>
     </div>`;
     return;
   }
@@ -2360,24 +2406,55 @@ function hideResetDialog() {
 function onResetOverlayClick(e) {
   if (e.target === document.getElementById('resetDialogOverlay')) hideResetDialog();
 }
-function doReset() {
-  const listId = currentListId; // 타임아웃 전에 미리 캡처
+function confirmReset() {
+  // 지난번 항목 desc 업데이트
+  const lastDesc = document.getElementById('resetOptLastDesc');
+  const lastOpt  = document.getElementById('resetOptLast');
+  if (costcoHistory.length) {
+    const last = costcoHistory[0];
+    if (lastDesc) lastDesc.textContent = `${last.date} · ${last.total}개 항목`;
+    if (lastOpt)  lastOpt.disabled = false;
+  } else {
+    if (lastDesc) lastDesc.textContent = '기록 없음';
+    if (lastOpt)  { lastOpt.disabled = true; lastOpt.style.opacity = '.4'; }
+  }
+  const o = document.getElementById('resetDialogOverlay');
+  o.style.display = 'flex';
+  requestAnimationFrame(() => o.classList.add('show'));
+}
+function doReset(mode) {
+  const listId = currentListId;
   hideResetDialog();
   setTimeout(() => {
     const list = getList(listId);
     if (!list) return;
+
+    // 현재 목록 히스토리에 저장
     const bought = list.items.filter(i => i.checked);
-    const now = new Date();
-    costcoHistory.unshift({
-      id:        now.getTime(),
-      date:      localDateStr(now),
-      purchased: bought.map(i => ({ name: i.name, qty: i.qty || null })),
-      total:     bought.length,
-    });
-    localStorage.setItem('costco-history', JSON.stringify(costcoHistory));
-    // 기본 항목 복원 + 사용자가 추가한 항목은 unchecked 유지
-    const userAdded = list.items.filter(i => !i.isDefault).map(i => ({...i, checked: false}));
-    list.items = [...COSTCO_DEFAULTS.map(i => ({...i, checked: false})), ...userAdded];
+    if (bought.length || list.items.length) {
+      const now = new Date();
+      costcoHistory.unshift({
+        id:        now.getTime(),
+        date:      localDateStr(now),
+        purchased: list.items.map(i => ({ name: i.name, qty: i.qty || null, checked: i.checked })),
+        total:     bought.length,
+      });
+      localStorage.setItem('costco-history', JSON.stringify(costcoHistory));
+    }
+
+    if (mode === 'last' && costcoHistory.length > 1) {
+      const prev = costcoHistory[1];
+      list.items = prev.purchased.map((p, idx) => ({
+        id: `h-${Date.now()}-${idx}`, name: p.name,
+        qty: p.qty || undefined, checked: false,
+        category: 'B1', isDefault: false,
+      }));
+    } else if (mode === 'defaults') {
+      list.items = COSTCO_DEFAULTS.map(i => ({...i, checked: false}));
+    } else {
+      list.items = [];
+    }
+
     saveLists();
     setDetailTab('shopping');
     document.getElementById('detailResetBtn').style.display = '';
@@ -3048,10 +3125,22 @@ function openEditSheet(itemId) {
   const isDelivery = currentListId === 'delivery';
   document.getElementById('editStoreRow').style.display = isDelivery ? '' : 'none';
   if (isDelivery) renderStoreChips('editStoreChips', 'editStoreCustomInput', item.store || '');
+  const isRoutine = getList(currentListId)?.type === 'routine';
+  document.getElementById('editFloorRow').style.display = isRoutine ? 'flex' : 'none';
+  if (isRoutine) setEditFloor(item.category || 'B1');
   const o = document.getElementById('editOverlay');
   o.style.display = 'flex';
   requestAnimationFrame(() => o.classList.add('show'));
   setTimeout(() => document.getElementById('editItemInput').focus(), 280);
+}
+function setEditFloor(floor) {
+  document.getElementById('editFloor1F').classList.toggle('active', floor === '1F');
+  document.getElementById('editFloorB1').classList.toggle('active', floor === 'B1');
+  document.getElementById('editFloor1F').dataset.selected = floor === '1F' ? '1' : '';
+  document.getElementById('editFloorB1').dataset.selected = floor === 'B1' ? '1' : '';
+}
+function getEditFloor() {
+  return document.getElementById('editFloor1F').dataset.selected === '1' ? '1F' : 'B1';
 }
 function closeEditSheet() {
   const o = document.getElementById('editOverlay');
@@ -3071,6 +3160,7 @@ function confirmEdit() {
   list.items = list.items.map(i => {
     if (i.id !== editTargetId) return i;
     const updated = { ...i, name };
+    if (getList(currentListId)?.type === 'routine') updated.category = getEditFloor();
     if (i.todoDate !== undefined) {
       updated.time = timeVal;
       if (!timeVal) delete updated.time;
