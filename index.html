@@ -1188,13 +1188,14 @@
       padding: 3px 9px; flex-shrink: 0; letter-spacing: 0.2px;
     }
     .item-row.checked-row .time-badge { opacity: 0.45; }
-    .home-icon-btn {
-      width: 32px; height: 32px; border: none; background: none;
-      color: var(--label-3); font-size: 17px; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      border-radius: var(--r-pill);
+    .home-data-action-btn {
+      height: 30px; padding: 0 12px; border: none;
+      border-radius: var(--r-pill); background: var(--fill);
+      color: var(--label-2); font-size: 13px; font-weight: 500;
+      cursor: pointer; font-family: var(--f-t);
     }
-    .home-icon-btn:active { background: var(--fill); color: var(--label); }
+    .home-data-action-btn--blue { background: var(--blue); color: #fff; }
+    .home-data-action-btn:active { opacity: .7; }
   </style>
 </head>
 <body>
@@ -1204,13 +1205,9 @@
   <div id="homeView">
     <header class="home-header">
       <h1>내 체크리스트</h1>
-      <div style="display:flex;align-items:center;gap:4px">
-        <button class="home-icon-btn" onclick="importData()" title="복원">
-          <i class="icon-cloud-upload"></i>
-        </button>
-        <button class="home-icon-btn" onclick="exportData()" title="백업">
-          <i class="icon-cloud-download"></i>
-        </button>
+      <div style="display:flex;align-items:center;gap:6px">
+        <button class="home-data-action-btn" onclick="importData()">복원</button>
+        <button class="home-data-action-btn home-data-action-btn--blue" onclick="exportData()">백업</button>
         <button class="home-add-btn" onclick="openAddListSheet()">
           <i class="icon-plus"></i>
         </button>
@@ -2364,21 +2361,23 @@ function onResetOverlayClick(e) {
   if (e.target === document.getElementById('resetDialogOverlay')) hideResetDialog();
 }
 function doReset() {
+  const listId = currentListId; // 타임아웃 전에 미리 캡처
   hideResetDialog();
   setTimeout(() => {
-    const list   = getList(currentListId);
+    const list = getList(listId);
+    if (!list) return;
     const bought = list.items.filter(i => i.checked);
-    if (bought.length) {
-      const now = new Date();
-      costcoHistory.unshift({
-        id:        now.getTime(),
-        date:      now.toISOString().split('T')[0],
-        purchased: bought.map(i => ({ name: i.name, qty: i.qty || null })),
-        total:     bought.length,
-      });
-      localStorage.setItem('costco-history', JSON.stringify(costcoHistory));
-    }
-    list.items = COSTCO_DEFAULTS.map(i => ({...i, checked: false}));
+    const now = new Date();
+    costcoHistory.unshift({
+      id:        now.getTime(),
+      date:      localDateStr(now),
+      purchased: bought.map(i => ({ name: i.name, qty: i.qty || null })),
+      total:     bought.length,
+    });
+    localStorage.setItem('costco-history', JSON.stringify(costcoHistory));
+    // 기본 항목 복원 + 사용자가 추가한 항목은 unchecked 유지
+    const userAdded = list.items.filter(i => !i.isDefault).map(i => ({...i, checked: false}));
+    list.items = [...COSTCO_DEFAULTS.map(i => ({...i, checked: false})), ...userAdded];
     saveLists();
     setDetailTab('shopping');
     document.getElementById('detailResetBtn').style.display = '';
@@ -3192,6 +3191,19 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
 /* ─────────────────────────────────────────
    EXPORT / IMPORT
 ───────────────────────────────────────── */
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.textContent = msg;
+  Object.assign(t.style, {
+    position:'fixed', bottom:'100px', left:'50%', transform:'translateX(-50%)',
+    background:'rgba(44,44,46,0.96)', color:'#fff', padding:'10px 20px',
+    borderRadius:'20px', fontSize:'14px', zIndex:'9999',
+    backdropFilter:'blur(10px)', whiteSpace:'nowrap',
+    boxShadow:'0 4px 16px rgba(0,0,0,.4)'
+  });
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2200);
+}
 function exportData() {
   saveAll();
   const data = {
@@ -3206,8 +3218,10 @@ function exportData() {
   const d    = new Date(); const pad = n => String(n).padStart(2,'0');
   a.download = `checklist-backup-${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}.json`;
   a.href = url; a.click(); URL.revokeObjectURL(url);
+  setTimeout(() => showToast('✅ 백업 파일이 저장됐어요'), 600);
 }
 function importData() {
+  if (!confirm('백업 파일을 불러오면 현재 데이터가 덮어씌워집니다.\n계속할까요?')) return;
   const input = document.createElement('input');
   input.type = 'file'; input.accept = '.json,application/json';
   input.addEventListener('change', () => {
