@@ -180,9 +180,6 @@
     /* Detail header */
     .detail-header {
       display: flex; align-items: center; gap: 8px;
-      background: rgba(28,28,30,0.88);
-      backdrop-filter: saturate(180%) blur(20px);
-      -webkit-backdrop-filter: saturate(180%) blur(20px);
       border-bottom: 0.5px solid var(--sep-soft);
       padding: 0 16px; height: 56px; flex-shrink: 0;
     }
@@ -273,7 +270,7 @@
     #editStoreRow { margin-bottom: 10px; }
     #inputRow { display: flex; align-items: center; gap: 8px; }
     #newItemInput {
-      flex: 1; height: 44px; background: var(--card-2); border: none;
+      flex: 1; min-width: 0; height: 54px; background: var(--card-2); border: none;
       border-radius: var(--r-pill); padding: 0 17px;
       font-family: var(--f-t); font-size: 17px; color: var(--label);
       letter-spacing: -0.374px; outline: none;
@@ -281,7 +278,7 @@
     #newItemInput::placeholder { color: var(--label-3); font-size: 15px; }
     #newItemInput:focus { background: var(--card); }
     #addItemBtn {
-      height: 44px; padding: 0 16px; flex-shrink: 0;
+      height: 54px; padding: 0 20px; flex-shrink: 0; white-space: nowrap;
       background: var(--blue); color: #fff; border: none;
       border-radius: var(--r-pill);
       font-family: var(--f-t); font-size: 15px; cursor: pointer;
@@ -405,6 +402,12 @@
       color: var(--label-3); letter-spacing: 0.5px; text-transform: uppercase;
     }
     .cart-badge { font-size: 12px; color: var(--label-4); }
+    .cart-clear-btn {
+      font-size: 12px; color: var(--red); background: none; border: none;
+      cursor: pointer; padding: 4px 8px; border-radius: var(--r-pill);
+      font-family: var(--f-t);
+    }
+    .cart-clear-btn:active { background: rgba(255,69,58,.12); }
 
     .item-block {
       background: var(--card); border-radius: var(--r-lg);
@@ -969,27 +972,25 @@
     .oquick-btn:active { transform: scale(.95); }
 
     /* ── Outfit week navigation ── */
-    .oweek-nav {
-      display: flex; align-items: center;
-      padding: 12px 16px 4px;
-      gap: 8px;
+    #outfitWeekNav {
+      display: flex; align-items: center; gap: 4px; flex-shrink: 0;
     }
     .oweek-arrow {
-      width: 36px; height: 36px; border: none;
-      background: var(--card); border-radius: var(--r-pill);
-      color: var(--blue); font-size: 22px;
+      width: 28px; height: 28px; border: none;
+      background: var(--fill); border-radius: var(--r-pill);
+      color: var(--blue); font-size: 18px;
       display: flex; align-items: center; justify-content: center;
       cursor: pointer; flex-shrink: 0;
     }
     .oweek-arrow:active { opacity: .6; }
     .oweek-label {
-      flex: 1; display: flex; align-items: center; justify-content: center;
-      gap: 8px; font-size: 18px; font-weight: 700; color: var(--label);
+      display: flex; align-items: center; gap: 5px;
+      font-size: 16px; font-weight: 700; color: var(--label);
     }
     .oweek-now {
-      font-size: 10px; font-weight: 700; letter-spacing: .4px;
+      font-size: 9px; font-weight: 700; letter-spacing: .3px;
       color: var(--blue); background: var(--blue-dim);
-      border-radius: var(--r-pill); padding: 2px 8px;
+      border-radius: var(--r-pill); padding: 2px 6px;
     }
 
     /* ── Outfit weather strip ── */
@@ -1167,7 +1168,7 @@
     }
     .suggest-chip:active { background: var(--blue-dim); color: var(--blue); border-color: var(--blue); }
     #todoTimeInput {
-      flex-shrink: 0; width: 96px; height: 44px;
+      flex-shrink: 0; width: 84px; height: 54px;
       background: var(--card-2); border: none;
       border-radius: var(--r-pill); padding: 0 12px;
       font-family: var(--f-t); font-size: 15px; color: var(--label);
@@ -1213,6 +1214,7 @@
     </header>
     <div id="detailTitleBar">
       <span id="detailTitle"></span>
+      <div id="outfitWeekNav" style="display:none"></div>
       <button id="detailResetBtn" style="display:none" onclick="confirmReset()">새 장보기 시작</button>
     </div>
 
@@ -1872,6 +1874,7 @@ function openList(id) {
     document.getElementById('floorSelector').style.display = 'flex';
     document.getElementById('suggestBar').style.display = 'none';
     document.getElementById('storeRow').style.display = 'none';
+    document.getElementById('outfitWeekNav').style.display = 'none';
     document.getElementById('detailInputBar').style.display = '';
     setDetailTab('shopping');
     renderRoutineContent(list);
@@ -1898,6 +1901,7 @@ function openList(id) {
     document.getElementById('suggestBar').style.display = 'none';
     document.getElementById('todoTimeInput').style.display = '';
     document.getElementById('storeRow').style.display = 'none';
+    document.getElementById('outfitWeekNav').style.display = 'none';
     document.getElementById('detailInputBar').style.display = '';
     renderTodoContent(list);
   } else {
@@ -1908,6 +1912,7 @@ function openList(id) {
     document.getElementById('todoTimeInput').style.display = 'none';
     document.getElementById('storeRow').style.display = id === 'delivery' ? '' : 'none';
     if (id === 'delivery') renderStoreChips('storeChips', 'storeCustomInput', '');
+    document.getElementById('outfitWeekNav').style.display = 'none';
     document.getElementById('detailInputBar').style.display = '';
     renderGeneralContent(list);
   }
@@ -1918,6 +1923,7 @@ function openList(id) {
 function closeList() {
   document.getElementById('detailView').classList.remove('open');
   document.getElementById('outfitTabBar').classList.remove('visible');
+  document.getElementById('outfitWeekNav').style.display = 'none';
   currentListId = null;
   setTimeout(renderHome, 320);
 }
@@ -2118,7 +2124,17 @@ function renderGeneralContent(list) {
   if (checked.length) {
     const hdr = document.createElement('div');
     hdr.className = 'cart-section-header';
+    const clearBtn = document.createElement('button');
+    clearBtn.className = 'cart-clear-btn';
+    clearBtn.textContent = '전체 삭제';
+    clearBtn.addEventListener('click', () => {
+      const l = getList(currentListId);
+      l.items = l.items.filter(i => !i.checked);
+      saveLists();
+      renderDetail();
+    });
     hdr.innerHTML = `<span class="cart-section-title">완료</span><span class="cart-badge">${checked.length}개</span>`;
+    hdr.appendChild(clearBtn);
     el.appendChild(hdr);
     const block = document.createElement('div');
     block.className = 'item-block cart-block';
@@ -2569,10 +2585,13 @@ function renderWeatherStrip(weekDays, container) {
     if (isToday) todayCol = col;
     container.appendChild(col);
   });
-  if (todayCol) requestAnimationFrame(() => {
-    // 전날 카드 절반(35px) + gap(8px) 만큼 앞에 보이도록
-    container.scrollLeft = todayCol.offsetLeft - (todayCol.clientWidth / 2 + 8);
-  });
+  if (todayCol) setTimeout(() => {
+    // 오늘 카드 1번째 — 전날 카드 오른쪽 절반(35px)이 왼쪽 엣지에서 노출
+    const cardW = todayCol.offsetWidth; // 70px
+    const gap   = 8;
+    const peek  = cardW / 2; // 35px — 전날 카드 절반
+    container.scrollLeft = todayCol.offsetLeft - peek - gap;
+  }, 50);
 }
 
 function renderOutfitContent() {
@@ -2587,43 +2606,35 @@ function renderOutfitContent() {
   const KR = ['일','월','화','수','목','금','토'];
   const KR_FULL = ['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
 
-  /* ── Week navigation header ── */
-  const weekNav = document.createElement('div');
-  weekNav.className = 'oweek-nav';
-
-  const prevBtn = document.createElement('button');
-  prevBtn.className = 'oweek-arrow';
-  prevBtn.innerHTML = '&#8249;';
-  prevBtn.addEventListener('click', () => {
-    const d = new Date(outfitDay + 'T00:00:00');
-    d.setDate(d.getDate() - 7);
-    outfitDay = localDateStr(d);
-    renderOutfitContent();
-  });
-
-  const nextBtn = document.createElement('button');
-  nextBtn.className = 'oweek-arrow';
-  nextBtn.innerHTML = '&#8250;';
-  nextBtn.addEventListener('click', () => {
-    const d = new Date(outfitDay + 'T00:00:00');
-    d.setDate(d.getDate() + 7);
-    outfitDay = localDateStr(d);
-    renderOutfitContent();
-  });
-
+  /* ── Week navigation → detailTitleBar 내 #outfitWeekNav ── */
   const mon = new Date(weekDays[0] + 'T00:00:00');
   const sun = new Date(weekDays[6] + 'T00:00:00');
   const fmtMD = d => `${d.getMonth()+1}.${d.getDate()}`;
   const isThisWeek = weekDays.includes(todayStr);
 
-  const weekLabel = document.createElement('div');
-  weekLabel.className = 'oweek-label';
-  weekLabel.innerHTML = `<span>${fmtMD(mon)} ~ ${fmtMD(sun)}</span>${isThisWeek ? '<span class="oweek-now">이번 주</span>' : ''}`;
-
-  weekNav.appendChild(prevBtn);
-  weekNav.appendChild(weekLabel);
-  weekNav.appendChild(nextBtn);
-  el.appendChild(weekNav);
+  const weekNavEl = document.getElementById('outfitWeekNav');
+  if (weekNavEl) {
+    weekNavEl.style.display = 'flex';
+    weekNavEl.innerHTML = '';
+    const prevBtn = document.createElement('button');
+    prevBtn.className = 'oweek-arrow'; prevBtn.innerHTML = '&#8249;';
+    prevBtn.addEventListener('click', () => {
+      const d = new Date(outfitDay + 'T00:00:00'); d.setDate(d.getDate() - 7);
+      outfitDay = localDateStr(d); renderOutfitContent();
+    });
+    const nextBtn = document.createElement('button');
+    nextBtn.className = 'oweek-arrow'; nextBtn.innerHTML = '&#8250;';
+    nextBtn.addEventListener('click', () => {
+      const d = new Date(outfitDay + 'T00:00:00'); d.setDate(d.getDate() + 7);
+      outfitDay = localDateStr(d); renderOutfitContent();
+    });
+    const weekLabel = document.createElement('div');
+    weekLabel.className = 'oweek-label';
+    weekLabel.innerHTML = `<span>${fmtMD(mon)} ~ ${fmtMD(sun)}</span>${isThisWeek ? '<span class="oweek-now">이번주</span>' : ''}`;
+    weekNavEl.appendChild(prevBtn);
+    weekNavEl.appendChild(weekLabel);
+    weekNavEl.appendChild(nextBtn);
+  }
 
   /* ── Weather strip ── */
   const weatherStrip = document.createElement('div');
