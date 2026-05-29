@@ -1167,28 +1167,34 @@
       cursor: pointer; white-space: nowrap;
     }
     .suggest-chip:active { background: var(--blue-dim); color: var(--blue); border-color: var(--blue); }
-    #todoTimeInput {
-      flex-shrink: 0; width: 84px; height: 54px;
-      background: var(--card-2); border: none;
-      border-radius: var(--r-pill); padding: 0 12px;
-      font-family: var(--f-t); font-size: 15px; color: var(--label);
-      outline: none; color-scheme: dark;
+    #todoTimeWrap {
+      display: flex; align-items: center; gap: 0;
+      background: var(--card-2); border-radius: var(--r-pill);
+      height: 54px; padding: 0 12px; flex-shrink: 0;
     }
-    #todoTimeInput:focus { background: var(--card); }
+    #todoTimeIcon {
+      font-size: 15px; color: var(--label-3); flex-shrink: 0; pointer-events: none;
+    }
+    #todoTimeInput {
+      width: 80px; height: 100%; border: none; background: none;
+      padding: 0 0 0 6px;
+      font-family: var(--f-t); font-size: 14px; color: var(--label);
+      outline: none; color-scheme: dark; flex-shrink: 0;
+    }
+    #todoTimeInput::-webkit-calendar-picker-indicator { display: none; }
     .time-badge {
       font-size: 13px; color: var(--blue);
       background: var(--blue-dim); border-radius: var(--r-pill);
       padding: 3px 9px; flex-shrink: 0; letter-spacing: 0.2px;
     }
     .item-row.checked-row .time-badge { opacity: 0.45; }
-    .home-data-btns { display: flex; gap: 6px; }
-    .home-data-btn {
-      height: 28px; padding: 0 10px; border: none;
-      border-radius: var(--r-pill); background: var(--fill);
-      color: var(--label-2); font-size: 12px; font-weight: 500;
-      cursor: pointer; flex-shrink: 0;
+    .home-icon-btn {
+      width: 32px; height: 32px; border: none; background: none;
+      color: var(--label-3); font-size: 17px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: var(--r-pill);
     }
-    .home-data-btn:active { opacity: .7; }
+    .home-icon-btn:active { background: var(--fill); color: var(--label); }
   </style>
 </head>
 <body>
@@ -1198,9 +1204,17 @@
   <div id="homeView">
     <header class="home-header">
       <h1>내 체크리스트</h1>
-      <button class="home-add-btn" onclick="openAddListSheet()">
-        <i class="icon-plus"></i>
-      </button>
+      <div style="display:flex;align-items:center;gap:4px">
+        <button class="home-icon-btn" onclick="importData()" title="복원">
+          <i class="icon-cloud-upload"></i>
+        </button>
+        <button class="home-icon-btn" onclick="exportData()" title="백업">
+          <i class="icon-cloud-download"></i>
+        </button>
+        <button class="home-add-btn" onclick="openAddListSheet()">
+          <i class="icon-plus"></i>
+        </button>
+      </div>
     </header>
     <div class="home-scroll" id="homeScroll"></div>
   </div>
@@ -1232,7 +1246,10 @@
           <button class="floor-chip" data-floor="1F" onclick="selectFloor('1F')">1F</button>
           <button class="floor-chip active" data-floor="B1" onclick="selectFloor('B1')">B1</button>
         </div>
-        <input id="todoTimeInput" type="time" style="display:none" />
+        <div id="todoTimeWrap" style="display:none">
+          <i class="icon-clock" id="todoTimeIcon"></i>
+          <input id="todoTimeInput" type="time" />
+        </div>
         <input id="newItemInput" type="text" placeholder="항목 추가"
           oninput="syncAddBtn()"
           onkeydown="if(event.key==='Enter' && !event.isComposing) addItem()" />
@@ -1889,7 +1906,7 @@ function openList(id) {
       document.getElementById(tid).classList.toggle('active', i === 0));
     document.getElementById('floorSelector').style.display = 'none';
     document.getElementById('suggestBar').style.display = 'none';
-    document.getElementById('todoTimeInput').style.display = 'none';
+    document.getElementById('todoTimeWrap').style.display = 'none';
     document.getElementById('storeRow').style.display = 'none';
     document.getElementById('detailInputBar').style.display = 'none';
     renderOutfitContent();
@@ -1899,7 +1916,7 @@ function openList(id) {
     document.getElementById('detailTabBar').classList.remove('visible');
     document.getElementById('floorSelector').style.display = 'none';
     document.getElementById('suggestBar').style.display = 'none';
-    document.getElementById('todoTimeInput').style.display = '';
+    document.getElementById('todoTimeWrap').style.display = '';
     document.getElementById('storeRow').style.display = 'none';
     document.getElementById('outfitWeekNav').style.display = 'none';
     document.getElementById('detailInputBar').style.display = '';
@@ -1909,7 +1926,7 @@ function openList(id) {
     document.getElementById('detailTabBar').classList.remove('visible');
     document.getElementById('floorSelector').style.display = 'none';
     document.getElementById('suggestBar').style.display = 'none';
-    document.getElementById('todoTimeInput').style.display = 'none';
+    document.getElementById('todoTimeWrap').style.display = 'none';
     document.getElementById('storeRow').style.display = id === 'delivery' ? '' : 'none';
     if (id === 'delivery') renderStoreChips('storeChips', 'storeCustomInput', '');
     document.getElementById('outfitWeekNav').style.display = 'none';
