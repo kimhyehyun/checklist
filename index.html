@@ -881,6 +881,30 @@
       border-radius: var(--r-pill); color: var(--label-3);
       font-family: var(--f-t); font-size: 13px; cursor: pointer; flex-shrink: 0;
     }
+    #editCopyBtn {
+      display: block; width: 100%; background: none; border: none;
+      font-family: var(--f-t); font-size: 14px; color: var(--label-2);
+      cursor: pointer; text-align: center; padding: 10px 0;
+      margin-bottom: 6px; border-radius: var(--r-pill);
+    }
+    #editCopyBtn:active { background: var(--fill); }
+    #todoCopyOverlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+      display: none; align-items: flex-end; justify-content: center;
+      z-index: 400; opacity: 0; transition: opacity .22s;
+    }
+    #todoCopyOverlay.show { opacity: 1; }
+    #todoCopySheet {
+      background: var(--raised); border-radius: var(--r-lg) var(--r-lg) 0 0;
+      padding: 0 24px calc(32px + env(safe-area-inset-bottom, 0px));
+      width: 100%; transform: translateY(40px); transition: transform .22s ease;
+    }
+    #todoCopyOverlay.show #todoCopySheet { transform: translateY(0); }
+    #todoCopySheet::before {
+      content: ''; display: block; width: 36px; height: 4px;
+      background: var(--sep); border-radius: var(--r-pill);
+      margin: 20px auto 18px;
+    }
     .edit-sheet-btns { display: flex; gap: 10px; }
     .edit-sheet-btns button {
       height: 50px; border: none; border-radius: var(--r-pill);
@@ -1520,6 +1544,7 @@
         <div id="editStoreChips" class="store-chips-bar"></div>
         <input id="editStoreCustomInput" class="store-custom-inp" type="text" placeholder="직접 입력…" style="display:none" />
       </div>
+      <button id="editCopyBtn" style="display:none" onclick="openTodoCopySheet()">다른 날짜에 복사 →</button>
       <div class="edit-sheet-btns">
         <button id="editCancelBtn" onclick="closeEditSheet()">취소</button>
         <button id="editConfirmBtn" onclick="confirmEdit()">저장</button>
