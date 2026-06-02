@@ -20,6 +20,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="내 체크리스트" />
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <style>
     /* ─── Uber Design Tokens ─── */
     :root {
@@ -666,6 +667,67 @@
     }
     .reset-cancel-btn:active { opacity: .7; }
 
+    /* ── Auth sheet ── */
+    #authOverlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+      display: none; align-items: flex-end; justify-content: center;
+      z-index: 400; opacity: 0; transition: opacity .22s;
+    }
+    #authOverlay.show { opacity: 1; }
+    #authSheet {
+      background: var(--bg); border-radius: var(--r-lg) var(--r-lg) 0 0;
+      padding: 0 20px calc(32px + env(safe-area-inset-bottom,0px));
+      width: 100%; transform: translateY(40px); transition: transform .22s ease;
+    }
+    #authOverlay.show #authSheet { transform: translateY(0); }
+    .auth-bar { width:36px;height:4px;background:var(--sep);border-radius:var(--r-pill);margin:16px auto 20px; }
+    .auth-title { font-size:20px;font-weight:700;color:var(--label);margin-bottom:20px; }
+    .auth-input {
+      width:100%;height:52px;background:var(--fill);border:1px solid var(--sep);
+      border-radius:var(--r-md);padding:0 16px;margin-bottom:12px;
+      font-family:var(--f-t);font-size:16px;color:var(--label);outline:none;
+    }
+    .auth-input:focus { border-color:var(--label); }
+    .auth-input::placeholder { color:var(--label-3); }
+    .auth-btn {
+      width:100%;height:52px;background:var(--label);color:#fff;border:none;
+      border-radius:var(--r-pill);font-family:var(--f-t);font-size:16px;font-weight:600;
+      cursor:pointer;margin-bottom:10px;
+    }
+    .auth-btn:active { opacity:.8; }
+    .auth-btn-sub {
+      width:100%;height:44px;background:none;color:var(--label-3);border:none;
+      font-family:var(--f-t);font-size:14px;cursor:pointer;
+    }
+    .auth-status {
+      display:flex;align-items:center;gap:10px;padding:14px 0;margin-bottom:16px;
+      border-bottom:1px solid var(--sep);
+    }
+    .auth-avatar {
+      width:40px;height:40px;border-radius:var(--r-pill);background:var(--label);
+      color:#fff;display:flex;align-items:center;justify-content:center;
+      font-size:16px;font-weight:700;flex-shrink:0;
+    }
+    .auth-email { font-size:14px;color:var(--label-2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+    .auth-sync-info { font-size:12px;color:var(--label-3);margin-bottom:16px; }
+    #syncBtn {
+      width:100%;height:48px;background:var(--fill);border:1px solid var(--sep);
+      border-radius:var(--r-pill);font-family:var(--f-t);font-size:15px;font-weight:500;
+      color:var(--label);cursor:pointer;margin-bottom:10px;
+    }
+    #syncBtn:active { background:var(--sep); }
+    .auth-cloud-btn {
+      width:32px;height:32px;border:none;background:none;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;color:var(--label-3);
+      position:relative;border-radius:var(--r-pill);
+    }
+    .auth-cloud-btn:active { background:var(--fill); }
+    .auth-cloud-btn [data-lucide] { width:20px;height:20px;stroke-width:1.8; }
+    .auth-cloud-dot {
+      position:absolute;top:4px;right:4px;width:7px;height:7px;
+      background:#22c55e;border-radius:var(--r-pill);border:1.5px solid var(--bg);
+    }
+
     /* ══════════════════════════════════════════
        ADD LIST SHEET
     ══════════════════════════════════════════ */
@@ -1260,15 +1322,45 @@
   <div id="homeView">
     <header class="home-header">
       <h1>내 체크리스트</h1>
-      <div style="display:flex;align-items:center;gap:6px">
-        <button class="home-data-action-btn" onclick="importData()">복원</button>
-        <button class="home-data-action-btn home-data-action-btn--blue" onclick="exportData()">백업</button>
+      <div style="display:flex;align-items:center;gap:4px">
+        <button class="auth-cloud-btn" id="authHeaderBtn" onclick="openAuthSheet()">
+          <i data-lucide="cloud"></i>
+          <span class="auth-cloud-dot" id="authDot" style="display:none"></span>
+        </button>
         <button class="home-add-btn" onclick="openAddListSheet()">
           <i data-lucide="plus"></i>
         </button>
       </div>
     </header>
     <div class="home-scroll" id="homeScroll"></div>
+  </div>
+
+  <!-- ═══ AUTH SHEET ═══ -->
+  <div id="authOverlay" onclick="if(event.target===this)closeAuthSheet()">
+    <div id="authSheet">
+      <div class="auth-bar"></div>
+      <div id="authLoggedOut">
+        <div class="auth-title">클라우드 동기화</div>
+        <input id="authEmail" class="auth-input" type="email" placeholder="이메일" autocomplete="email" />
+        <input id="authPw" class="auth-input" type="password" placeholder="비밀번호" autocomplete="current-password"
+          onkeydown="if(event.key==='Enter')doLogin()" />
+        <button class="auth-btn" onclick="doLogin()">로그인</button>
+        <button class="auth-btn-sub" onclick="doSignup()">계정 없으면 회원가입</button>
+      </div>
+      <div id="authLoggedIn" style="display:none">
+        <div class="auth-title">클라우드 동기화</div>
+        <div class="auth-status">
+          <div class="auth-avatar" id="authAvatar">?</div>
+          <div>
+            <div class="auth-email" id="authEmailLabel"></div>
+            <div style="font-size:11px;color:#22c55e;margin-top:2px">● 연결됨</div>
+          </div>
+        </div>
+        <div class="auth-sync-info" id="authSyncInfo">마지막 동기화: —</div>
+        <button id="syncBtn" onclick="manualSync()">지금 동기화</button>
+        <button class="auth-btn-sub" onclick="doLogout()">로그아웃</button>
+      </div>
+    </div>
   </div>
 
   <!-- ═══ DETAIL VIEW ═══ -->
@@ -3320,6 +3412,143 @@ function confirmAddList() {
    INIT
 ───────────────────────────────────────── */
 function initIcons() { if (typeof lucide !== 'undefined') lucide.createIcons(); }
+
+/* ─────────────────────────────────────────
+   SUPABASE — Cloud Sync
+───────────────────────────────────────── */
+const SUPA_URL = 'https://dbrkofzvaiesilsojksj.supabase.co';
+const SUPA_KEY = 'sb_publishable_sF_TrN7-T8YkI6D27kgtpQ_wRAmESCR';
+const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+let _syncTimer = null;
+let _lastSync  = null;
+let _sbUser    = null;
+
+function scheduleSyncToSupabase() {
+  clearTimeout(_syncTimer);
+  _syncTimer = setTimeout(syncToSupabase, 2500);
+}
+
+async function syncToSupabase() {
+  if (!_sbUser) return;
+  try {
+    await sb.from('user_data').upsert({
+      user_id:         _sbUser.id,
+      lists:           lists,
+      outfit_ootd:     { days: outfitDB, templates: outfitTmpls },
+      costco_history:  costcoHistory,
+      todo_suggestions: todoSuggestions,
+      updated_at:      new Date().toISOString(),
+    }, { onConflict: 'user_id' });
+    _lastSync = new Date();
+    updateSyncInfo();
+  } catch(e) { console.warn('sync error', e); }
+}
+
+async function loadFromSupabase() {
+  if (!_sbUser) return;
+  const { data } = await sb.from('user_data').select('*').eq('user_id', _sbUser.id).maybeSingle();
+  if (!data) { await syncToSupabase(); return; }
+  if (data.lists)           { lists = data.lists; localStorage.setItem('cl-lists', JSON.stringify(lists)); }
+  if (data.outfit_ootd)    { outfitDB = data.outfit_ootd.days || {}; outfitTmpls = data.outfit_ootd.templates || []; saveOutfit(); }
+  if (data.costco_history) { costcoHistory = data.costco_history; localStorage.setItem('costco-history', JSON.stringify(costcoHistory)); }
+  if (data.todo_suggestions){ todoSuggestions = data.todo_suggestions; localStorage.setItem('todo-suggestions', JSON.stringify(todoSuggestions)); }
+  _lastSync = data.updated_at ? new Date(data.updated_at) : null;
+  renderHome();
+  updateSyncInfo();
+}
+
+function updateSyncInfo() {
+  const el = document.getElementById('authSyncInfo');
+  if (!el) return;
+  if (_lastSync) {
+    const pad = n => String(n).padStart(2,'0');
+    el.textContent = `마지막 동기화: ${_lastSync.getFullYear()}.${pad(_lastSync.getMonth()+1)}.${pad(_lastSync.getDate())} ${pad(_lastSync.getHours())}:${pad(_lastSync.getMinutes())}`;
+  }
+}
+
+function updateAuthUI() {
+  const loggedOut = document.getElementById('authLoggedOut');
+  const loggedIn  = document.getElementById('authLoggedIn');
+  const dot       = document.getElementById('authDot');
+  if (_sbUser) {
+    if (loggedOut) loggedOut.style.display = 'none';
+    if (loggedIn)  loggedIn.style.display  = '';
+    const email = _sbUser.email || '';
+    const label = document.getElementById('authEmailLabel');
+    const avatar = document.getElementById('authAvatar');
+    if (label)  label.textContent  = email;
+    if (avatar) avatar.textContent = email[0]?.toUpperCase() || '?';
+    if (dot)    dot.style.display  = '';
+    updateSyncInfo();
+  } else {
+    if (loggedOut) loggedOut.style.display = '';
+    if (loggedIn)  loggedIn.style.display  = 'none';
+    if (dot)    dot.style.display  = 'none';
+  }
+}
+
+async function doLogin() {
+  const email = document.getElementById('authEmail').value.trim();
+  const pw    = document.getElementById('authPw').value;
+  if (!email || !pw) return;
+  const btn = document.querySelector('#authLoggedOut .auth-btn');
+  btn.textContent = '로그인 중…'; btn.disabled = true;
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: pw });
+  btn.textContent = '로그인'; btn.disabled = false;
+  if (error) { showToast('❌ ' + (error.message === 'Invalid login credentials' ? '이메일 또는 비밀번호를 확인하세요' : error.message)); return; }
+  _sbUser = data.user;
+  updateAuthUI();
+  await loadFromSupabase();
+  closeAuthSheet();
+  showToast('✅ 로그인됐어요');
+}
+
+async function doSignup() {
+  const email = document.getElementById('authEmail').value.trim();
+  const pw    = document.getElementById('authPw').value;
+  if (!email || !pw) { showToast('이메일과 비밀번호를 입력하세요'); return; }
+  const { error } = await sb.auth.signUp({ email, password: pw });
+  if (error) { showToast('❌ ' + error.message); return; }
+  showToast('📧 확인 이메일을 보냈어요. 인증 후 로그인하세요.');
+}
+
+async function doLogout() {
+  await sb.auth.signOut();
+  _sbUser = null;
+  updateAuthUI();
+  closeAuthSheet();
+  showToast('로그아웃됐어요');
+}
+
+async function manualSync() {
+  const btn = document.getElementById('syncBtn');
+  btn.textContent = '동기화 중…'; btn.disabled = true;
+  await syncToSupabase();
+  btn.textContent = '지금 동기화'; btn.disabled = false;
+  showToast('✅ 동기화 완료');
+}
+
+function openAuthSheet() {
+  const o = document.getElementById('authOverlay');
+  o.style.display = 'flex';
+  requestAnimationFrame(() => o.classList.add('show'));
+}
+function closeAuthSheet() {
+  const o = document.getElementById('authOverlay');
+  o.classList.remove('show');
+  setTimeout(() => { o.style.display = 'none'; }, 220);
+}
+
+// 세션 복원
+(async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session?.user) {
+    _sbUser = session.user;
+    updateAuthUI();
+    await loadFromSupabase();
+  }
+})();
 renderHome();
 initIcons();
 
