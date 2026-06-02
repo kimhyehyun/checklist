@@ -864,18 +864,19 @@
     }
     #editItemInput:focus { background: var(--card); }
     #editTimeRow {
-      display: none; align-items: center; gap: 12px; margin-bottom: 20px;
+      display: none; align-items: center; gap: 10px; margin-bottom: 20px;
     }
     #editTimeLabel {
-      font-size: 14px; color: var(--label-3); white-space: nowrap; width: 28px;
+      font-size: 13px; font-weight: 600; color: var(--label-3);
+      white-space: nowrap; letter-spacing: 0.3px;
     }
     #editTimeInput {
-      flex: 1; height: 44px; background: var(--card-2); border: none;
-      border-radius: var(--r-md); padding: 0 14px;
+      flex: 1; height: 44px; background: var(--card); border: 1.5px solid var(--sep);
+      border-radius: var(--r-pill); padding: 0 16px;
       font-family: var(--f-t); font-size: 16px; color: var(--label);
       outline: none; color-scheme: light;
     }
-    #editTimeInput:focus { background: var(--card); }
+    #editTimeInput:focus { border-color: var(--label); background: var(--card); }
     #editTimeClearBtn {
       height: 36px; padding: 0 14px; background: var(--fill); border: none;
       border-radius: var(--r-pill); color: var(--label-3);
@@ -1366,17 +1367,19 @@
       <div class="auth-bar"></div>
       <div id="authLoggedOut">
         <div class="auth-title">클라우드 동기화</div>
-        <input id="authEmail" class="auth-input" type="email" placeholder="이메일" autocomplete="email" enterkeyhint="next"
-          onkeydown="if(event.key==='Tab'||event.key==='Enter'){event.preventDefault();document.getElementById('authPw').focus()}" />
+        <input id="authEmail" class="auth-input" type="email" placeholder="이메일" autocomplete="email"
+          enterkeyhint="next" tabindex="1"
+          onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('authPw').focus()}" />
         <div style="position:relative">
           <input id="authPw" class="auth-input" type="password" placeholder="비밀번호" autocomplete="current-password"
+            enterkeyhint="done" tabindex="2"
             onkeydown="if(event.key==='Enter')doLogin()" style="padding-right:48px;width:100%" />
-          <button type="button" onclick="toggleAuthPw()" id="authPwToggle"
+          <button type="button" onclick="toggleAuthPw()" id="authPwToggle" tabindex="-1"
             style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--label-3);display:flex;align-items:center">
             <i data-lucide="eye" id="authPwIcon" style="width:18px;height:18px;stroke-width:1.8"></i>
           </button>
         </div>
-        <button class="auth-btn" onclick="doLogin()">로그인</button>
+        <button class="auth-btn" onclick="doLogin()" tabindex="3">로그인</button>
         <button class="auth-btn-sub" onclick="doSignup()">계정 없으면 회원가입</button>
       </div>
       <div id="authLoggedIn" style="display:none">
@@ -1552,6 +1555,18 @@
     </div>
   </div>
 
+  <!-- ═══ TODO COPY SHEET ═══ -->
+  <div id="todoCopyOverlay" onclick="if(event.target===this)closeTodoCopySheet()">
+    <div id="todoCopySheet">
+      <div style="font-size:17px;font-weight:600;color:var(--label);text-align:center;margin-bottom:20px">어느 날짜에 복사할까요?</div>
+      <div id="todoCopyChips" class="edit-date-chips" style="margin-bottom:24px"></div>
+      <div style="display:flex;gap:10px">
+        <button onclick="closeTodoCopySheet()" style="flex:1;height:50px;border:none;border-radius:var(--r-pill);background:var(--card-2);color:var(--label-2);font-family:var(--f-t);font-size:17px;cursor:pointer">취소</button>
+        <button onclick="confirmTodoCopy()" style="flex:2;height:50px;border:none;border-radius:var(--r-pill);background:var(--blue);color:#fff;font-family:var(--f-t);font-size:17px;cursor:pointer">복사</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ═══ OUTFIT COPY SHEET ═══ -->
   <div id="outfitCopyOverlay" onclick="if(event.target===this)closeOutfitCopySheet()">
     <div id="outfitCopySheet">
@@ -1723,6 +1738,7 @@ let selectedTodoDate = localDateStr(new Date());
 function saveLists() {
   localStorage.setItem('cl-lists', JSON.stringify(lists));
   localStorage.setItem('cl-local-updated-at', new Date().toISOString());
+  scheduleSyncToSupabase();
 }
 function isTodoType(id) { return id === 'todo'; }
 
@@ -1750,6 +1766,7 @@ let weatherCache = {}; // { [dateStr]: { code, max, min } }
 })();
 function saveOutfit() {
   localStorage.setItem('outfit-ootd', JSON.stringify({ days: outfitDB, templates: outfitTmpls }));
+  scheduleSyncToSupabase();
 }
 function outfitDayData(d) {
   if (!outfitDB[d]) outfitDB[d] = { top:'',bottom:'',shoes:'',socks:'',bag:'',earrings:'', checked:{} };
@@ -3284,6 +3301,7 @@ function openEditSheet(itemId) {
   const dateRow = document.getElementById('editDateRow');
   dateRow.style.display = isTodo ? '' : 'none';
   if (isTodo) renderEditDateChips(item.todoDate || localDateStr(new Date()));
+  document.getElementById('editCopyBtn').style.display = isTodoType(currentListId) ? '' : 'none';
   const o = document.getElementById('editOverlay');
   o.style.display = 'flex';
   requestAnimationFrame(() => o.classList.add('show'));
@@ -3334,6 +3352,56 @@ function clearEditTime() {
   document.getElementById('editTimeInput').value = '';
   updateEditTimeClearBtn();
 }
+let todoCopySelectedDate = null;
+
+function openTodoCopySheet() {
+  const bar = document.getElementById('todoCopyChips');
+  bar.innerHTML = '';
+  todoCopySelectedDate = null;
+  const todayStr = localDateStr(new Date());
+  const DOW = ['일','월','화','수','목','금','토'];
+  for (let i = 0; i <= 14; i++) {
+    const d = new Date(); d.setDate(d.getDate() + i);
+    const ds = localDateStr(d);
+    if (ds === (editDateSelected || todayStr)) continue; // 현재 날짜 제외
+    const chip = document.createElement('button');
+    chip.className = 'edit-date-chip';
+    const label = i === 0 ? '오늘' : i === 1 ? '내일'
+      : `${d.getMonth()+1}/${d.getDate()}(${DOW[d.getDay()]})`;
+    chip.textContent = label;
+    chip.addEventListener('click', () => {
+      todoCopySelectedDate = ds;
+      bar.querySelectorAll('.edit-date-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+    });
+    bar.appendChild(chip);
+  }
+  const o = document.getElementById('todoCopyOverlay');
+  o.style.display = 'flex';
+  requestAnimationFrame(() => o.classList.add('show'));
+}
+
+function closeTodoCopySheet() {
+  const o = document.getElementById('todoCopyOverlay');
+  o.classList.remove('show');
+  setTimeout(() => { o.style.display = 'none'; }, 220);
+}
+
+function confirmTodoCopy() {
+  if (!todoCopySelectedDate) { showToast('날짜를 선택하세요'); return; }
+  const list = getList(currentListId);
+  const item = list.items.find(i => i.id === editTargetId);
+  if (!item) return;
+  const newItem = { ...item, id: Date.now() + Math.random(), todoDate: todoCopySelectedDate, checked: false };
+  delete newItem.completedDate;
+  list.items.push(newItem);
+  saveLists();
+  closeTodoCopySheet();
+  closeEditSheet();
+  showToast('✅ 복사됐어요');
+  setTimeout(renderDetail, 440);
+}
+
 function closeEditSheet() {
   const o = document.getElementById('editOverlay');
   o.classList.remove('show');
@@ -3493,7 +3561,8 @@ async function syncToSupabase() {
 
 async function loadFromSupabase() {
   if (!_sbUser) return;
-  const { data } = await sb.from('user_data').select('*').eq('user_id', _sbUser.id).maybeSingle();
+  const { data, error } = await sb.from('user_data').select('*').eq('user_id', _sbUser.id).maybeSingle();
+  if (error) { console.warn('loadFromSupabase error', error); return; }
   if (!data) { await syncToSupabase(); return; }
 
   const supabaseTime = data.updated_at ? new Date(data.updated_at).getTime() : 0;
