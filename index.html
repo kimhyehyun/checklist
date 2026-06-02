@@ -1342,7 +1342,8 @@
       <div class="auth-bar"></div>
       <div id="authLoggedOut">
         <div class="auth-title">클라우드 동기화</div>
-        <input id="authEmail" class="auth-input" type="email" placeholder="이메일" autocomplete="email" />
+        <input id="authEmail" class="auth-input" type="email" placeholder="이메일" autocomplete="email" enterkeyhint="next"
+          onkeydown="if(event.key==='Tab'||event.key==='Enter'){event.preventDefault();document.getElementById('authPw').focus()}" />
         <div style="position:relative">
           <input id="authPw" class="auth-input" type="password" placeholder="비밀번호" autocomplete="current-password"
             onkeydown="if(event.key==='Enter')doLogin()" style="padding-right:48px;width:100%" />
