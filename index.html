@@ -520,7 +520,8 @@
       display: flex; flex-direction: column;
       align-items: center; padding: 80px 32px; text-align: center;
     }
-    .empty-emoji { font-size: 48px; margin-bottom: 20px; }
+    .empty-emoji { font-size: 48px; margin-bottom: 20px; display:flex; align-items:center; justify-content:center; }
+    .empty-emoji [data-lucide] { width:56px; height:56px; stroke-width:1.2; color:var(--label-3); }
     .empty-title {
       font-family: var(--f-d); font-size: 22px; font-weight: 600;
       color: var(--label); letter-spacing: -0.374px; margin-bottom: 8px;
@@ -2180,11 +2181,11 @@ function renderRoutineContent(list) {
 
   if (!unchecked.length && !checked.length) {
     el.innerHTML = `<div class="empty-state">
-      <div class="empty-emoji">🛒</div>
+      <div class="empty-emoji"><i data-lucide="shopping-cart"></i></div>
       <div class="empty-title">장보기 목록이 없어요</div>
       <div class="empty-body">위에 <b style="color:var(--blue)">새 장보기 시작</b>을 눌러<br>지난번 목록 또는 기본 목록을 불러오세요.</div>
     </div>`;
-    return;
+    initIcons(); return;
   }
 
   // Unchecked → grouped by category
@@ -2265,11 +2266,11 @@ function renderGeneralContent(list) {
 
   if (!list.items.length) {
     el.innerHTML = `<div class="empty-state">
-      <div class="empty-emoji">${list.icon}</div>
+      <div class="empty-emoji"><i data-lucide="${list.icon}"></i></div>
       <div class="empty-title">항목이 없어요</div>
       <div class="empty-body">아래 입력창으로<br>항목을 추가해보세요.</div>
     </div>`;
-    return;
+    initIcons(); return;
   }
 
   const unchecked = list.items.filter(i => !i.checked);
@@ -2359,11 +2360,11 @@ function renderHistoryContent() {
   el.innerHTML = '';
   if (!costcoHistory.length) {
     el.innerHTML = `<div class="empty-state">
-      <div class="empty-emoji">📋</div>
+      <div class="empty-emoji"><i data-lucide="shopping-cart"></i></div>
       <div class="empty-title">아직 기록이 없어요</div>
       <div class="empty-body">장보기를 마치고<br>"새 장보기 시작"을 누르면<br>자동으로 기록이 쌓여요.</div>
     </div>`;
-    return;
+    initIcons(); return;
   }
   const pad = document.createElement('div');
   pad.style.height = '12px';
@@ -2673,11 +2674,11 @@ function renderOutfitHistory() {
 
   if (!entries.length) {
     el.innerHTML = `<div class="empty-state">
-      <div class="empty-emoji">📆</div>
+      <div class="empty-emoji"><i data-lucide="shirt"></i></div>
       <div class="empty-title">기록이 없어요</div>
       <div class="empty-body">플래너에 코디를 입력하면<br>여기에 쌓여요.</div>
     </div>`;
-    return;
+    initIcons(); return;
   }
 
   const grouped = {};
@@ -2718,11 +2719,11 @@ function renderOutfitTemplateList() {
 
   if (!outfitTmpls.length) {
     el.innerHTML = `<div class="empty-state">
-      <div class="empty-emoji">📌</div>
+      <div class="empty-emoji"><i data-lucide="shirt"></i></div>
       <div class="empty-title">저장된 출근룩이 없어요</div>
       <div class="empty-body">플래너에서 📌 출근룩 저장을 눌러<br>자주 입는 코디를 저장해보세요.</div>
     </div>`;
-    return;
+    initIcons(); return;
   }
 
   const pad = document.createElement('div'); pad.style.height = '12px';
@@ -3046,10 +3047,11 @@ function renderTodoContent(list) {
     empty.style.paddingTop = '40px';
     const isOutfit = currentListId === 'outfit';
     empty.innerHTML = `
-      <div class="empty-emoji">${isOutfit ? '👗' : '✏️'}</div>
+      <div class="empty-emoji"><i data-lucide="${isOutfit ? 'shirt' : 'clipboard-list'}"></i></div>
       <div class="empty-title">${isOutfit ? '오늘 뭐 입을까?' : '할 일이 없어요'}</div>
       <div class="empty-body">아래 입력창으로 추가해보세요.</div>`;
     el.appendChild(empty);
+    initIcons();
   } else {
     if (unchecked.length) {
       const block = document.createElement('div');
@@ -3113,11 +3115,11 @@ function renderTodoHistoryContent(list) {
   const checked = list.items.filter(i => i.checked);
   if (!checked.length) {
     el.innerHTML = `<div class="empty-state">
-      <div class="empty-emoji">📋</div>
+      <div class="empty-emoji"><i data-lucide="${getList(currentListId)?.icon || 'list'}"></i></div>
       <div class="empty-title">완료한 항목이 없어요</div>
       <div class="empty-body">체크한 항목이 여기 쌓여요.</div>
     </div>`;
-    return;
+    initIcons(); return;
   }
 
   const pad = document.createElement('div'); pad.style.height = '12px';
@@ -3559,15 +3561,20 @@ function closeAuthSheet() {
   setTimeout(() => { o.style.display = 'none'; }, 220);
 }
 
-// 세션 복원
-(async () => {
-  const { data: { session } } = await sb.auth.getSession();
-  if (session?.user) {
-    _sbUser = session.user;
-    updateAuthUI();
+// 세션 복원 + 자동 로그인
+let _initialLoad = true;
+sb.auth.onAuthStateChange(async (event, session) => {
+  const wasLoggedIn = !!_sbUser;
+  _sbUser = session?.user ?? null;
+  updateAuthUI();
+  if (_sbUser && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && _initialLoad) {
+    _initialLoad = false;
     await loadFromSupabase();
   }
-})();
+  if (!_sbUser && wasLoggedIn) {
+    _initialLoad = true;
+  }
+});
 renderHome();
 initIcons();
 
