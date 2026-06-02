@@ -873,7 +873,7 @@
       flex: 1; height: 44px; background: var(--card-2); border: none;
       border-radius: var(--r-md); padding: 0 14px;
       font-family: var(--f-t); font-size: 16px; color: var(--label);
-      outline: none;
+      outline: none; color-scheme: light;
     }
     #editTimeInput:focus { background: var(--card); }
     #editTimeClearBtn {
@@ -1511,8 +1511,9 @@
         <div id="editDateChips" class="edit-date-chips"></div>
       </div>
       <div id="editTimeRow">
-        <input id="editTimeInput" type="time" />
-        <button id="editTimeClearBtn" onclick="document.getElementById('editTimeInput').value=''">삭제</button>
+        <span id="editTimeLabel">시간</span>
+        <input id="editTimeInput" type="time" oninput="updateEditTimeClearBtn()" />
+        <button id="editTimeClearBtn" onclick="clearEditTime()" style="display:none">삭제</button>
       </div>
       <div id="editStoreRow" style="display:none">
         <div id="editStoreChips" class="store-chips-bar"></div>
@@ -3247,7 +3248,7 @@ function openEditSheet(itemId) {
   const timeRow = document.getElementById('editTimeRow');
   const isTodo = (isTodoType(currentListId) || !!item.todoDate) && currentListId !== 'outfit';
   timeRow.style.display = isTodo ? 'flex' : 'none';
-  if (isTodo) document.getElementById('editTimeInput').value = item.time || '';
+  if (isTodo) { document.getElementById('editTimeInput').value = item.time || ''; updateEditTimeClearBtn(); }
   const isDelivery = currentListId === 'delivery';
   document.getElementById('editStoreRow').style.display = isDelivery ? '' : 'none';
   if (isDelivery) renderStoreChips('editStoreChips', 'editStoreCustomInput', item.store || '');
@@ -3298,6 +3299,14 @@ function setEditFloor(floor) {
 }
 function getEditFloor() {
   return document.getElementById('editFloor1F').dataset.selected === '1' ? '1F' : 'B1';
+}
+function updateEditTimeClearBtn() {
+  const val = document.getElementById('editTimeInput').value;
+  document.getElementById('editTimeClearBtn').style.display = val ? '' : 'none';
+}
+function clearEditTime() {
+  document.getElementById('editTimeInput').value = '';
+  updateEditTimeClearBtn();
 }
 function closeEditSheet() {
   const o = document.getElementById('editOverlay');
