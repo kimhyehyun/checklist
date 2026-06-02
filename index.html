@@ -866,21 +866,22 @@
     #editTimeRow {
       display: none; align-items: center; gap: 10px; margin-bottom: 20px;
     }
-    #editTimeLabel {
-      font-size: 13px; font-weight: 600; color: var(--label-3);
-      white-space: nowrap; letter-spacing: 0.3px;
+    #editTimeWrap {
+      display: flex; align-items: center;
+      background: var(--card-2); border-radius: var(--r-pill);
+      height: 54px; padding: 0 14px; gap: 6px; flex: 1;
     }
+    #editTimeWrap [data-lucide] { width: 16px; height: 16px; stroke-width: 1.8; color: var(--label-3); flex-shrink: 0; }
     #editTimeInput {
-      flex: 1; height: 44px; background: var(--card); border: 1.5px solid var(--sep);
-      border-radius: var(--r-pill); padding: 0 16px;
-      font-family: var(--f-t); font-size: 16px; color: var(--label);
-      outline: none; color-scheme: light;
+      flex: 1; height: 100%; border: none; background: none;
+      font-family: var(--f-t); font-size: 15px; color: var(--label);
+      outline: none; color-scheme: light; min-width: 0;
     }
-    #editTimeInput:focus { border-color: var(--label); background: var(--card); }
+    #editTimeInput::-webkit-calendar-picker-indicator { display: none; }
     #editTimeClearBtn {
-      height: 36px; padding: 0 14px; background: var(--fill); border: none;
+      height: 28px; padding: 0 10px; background: var(--fill); border: none;
       border-radius: var(--r-pill); color: var(--label-3);
-      font-family: var(--f-t); font-size: 13px; cursor: pointer; flex-shrink: 0;
+      font-family: var(--f-t); font-size: 12px; cursor: pointer; flex-shrink: 0;
     }
     #editCopyBtn {
       display: block; width: 100%; background: none; border: none;
@@ -1311,18 +1312,17 @@
     }
     .suggest-chip:active { background: var(--blue-dim); color: var(--blue); border-color: var(--blue); }
     #todoTimeWrap {
-      display: flex; align-items: center; gap: 0;
+      display: flex; align-items: center; gap: 6px;
       background: var(--card-2); border-radius: var(--r-pill);
-      height: 54px; padding: 0 12px; flex-shrink: 0;
+      height: 54px; padding: 0 14px; flex-shrink: 0;
     }
     #todoTimeIcon {
       font-size: 15px; color: var(--label-3); flex-shrink: 0; pointer-events: none;
     }
     #todoTimeInput {
       width: 80px; height: 100%; border: none; background: none;
-      padding: 0 0 0 6px;
-      font-family: var(--f-t); font-size: 14px; color: var(--label);
-      outline: none; color-scheme: dark; flex-shrink: 0;
+      font-family: var(--f-t); font-size: 15px; color: var(--label);
+      outline: none; color-scheme: light; flex-shrink: 0;
     }
     #todoTimeInput::-webkit-calendar-picker-indicator { display: none; }
     .time-badge {
@@ -1367,19 +1367,18 @@
       <div class="auth-bar"></div>
       <div id="authLoggedOut">
         <div class="auth-title">클라우드 동기화</div>
-        <input id="authEmail" class="auth-input" type="email" placeholder="이메일" autocomplete="email"
-          enterkeyhint="next" tabindex="1"
-          onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('authPw').focus()}" />
-        <div style="position:relative">
-          <input id="authPw" class="auth-input" type="password" placeholder="비밀번호" autocomplete="current-password"
-            enterkeyhint="done" tabindex="2"
-            onkeydown="if(event.key==='Enter')doLogin()" style="padding-right:48px;width:100%" />
-          <button type="button" onclick="toggleAuthPw()" id="authPwToggle" tabindex="-1"
-            style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--label-3);display:flex;align-items:center">
-            <i data-lucide="eye" id="authPwIcon" style="width:18px;height:18px;stroke-width:1.8"></i>
-          </button>
-        </div>
-        <button class="auth-btn" onclick="doLogin()" tabindex="3">로그인</button>
+        <form onsubmit="doLogin();return false" autocomplete="on">
+          <input id="authEmail" class="auth-input" type="email" placeholder="이메일" autocomplete="email" enterkeyhint="next" />
+          <div style="position:relative">
+            <input id="authPw" class="auth-input" type="password" placeholder="비밀번호" autocomplete="current-password"
+              enterkeyhint="done" style="padding-right:48px;width:100%" />
+            <button type="button" onclick="toggleAuthPw()" id="authPwToggle" tabindex="-1"
+              style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--label-3);display:flex;align-items:center">
+              <i data-lucide="eye" id="authPwIcon" style="width:18px;height:18px;stroke-width:1.8"></i>
+            </button>
+          </div>
+          <button type="submit" class="auth-btn">로그인</button>
+        </form>
         <button class="auth-btn-sub" onclick="doSignup()">계정 없으면 회원가입</button>
       </div>
       <div id="authLoggedIn" style="display:none">
@@ -1395,6 +1394,12 @@
         <button id="syncBtn" onclick="manualSync()">지금 동기화</button>
         <button class="auth-btn-sub" onclick="doLogout()">로그아웃</button>
       </div>
+      <!-- 로그인 여부 상관없이 항상 표시 -->
+      <div style="border-top:1px solid var(--sep);margin-top:12px;padding-top:12px;display:flex;gap:8px">
+        <button onclick="exportBackup()" style="flex:1;height:44px;background:var(--fill);border:1px solid var(--sep);border-radius:var(--r-pill);font-family:var(--f-t);font-size:13px;color:var(--label-2);cursor:pointer">📥 백업 저장</button>
+        <button onclick="document.getElementById('importFileInput').click()" style="flex:1;height:44px;background:var(--fill);border:1px solid var(--sep);border-radius:var(--r-pill);font-family:var(--f-t);font-size:13px;color:var(--label-2);cursor:pointer">📤 백업 복원</button>
+      </div>
+      <input id="importFileInput" type="file" accept=".json" style="display:none" onchange="importBackup(this)" />
     </div>
   </div>
 
@@ -1539,9 +1544,11 @@
         <div id="editDateChips" class="edit-date-chips"></div>
       </div>
       <div id="editTimeRow">
-        <span id="editTimeLabel">시간</span>
-        <input id="editTimeInput" type="time" oninput="updateEditTimeClearBtn()" />
-        <button id="editTimeClearBtn" onclick="clearEditTime()" style="display:none">삭제</button>
+        <div id="editTimeWrap">
+          <i data-lucide="clock"></i>
+          <input id="editTimeInput" type="time" oninput="updateEditTimeClearBtn()" />
+          <button id="editTimeClearBtn" onclick="clearEditTime()" style="display:none">삭제</button>
+        </div>
       </div>
       <div id="editStoreRow" style="display:none">
         <div id="editStoreChips" class="store-chips-bar"></div>
@@ -3304,7 +3311,7 @@ function openEditSheet(itemId) {
   document.getElementById('editCopyBtn').style.display = isTodoType(currentListId) ? '' : 'none';
   const o = document.getElementById('editOverlay');
   o.style.display = 'flex';
-  requestAnimationFrame(() => o.classList.add('show'));
+  requestAnimationFrame(() => { o.classList.add('show'); initIcons(); });
   setTimeout(() => document.getElementById('editItemInput').focus(), 280);
 }
 let editDateSelected = null;
@@ -3559,11 +3566,20 @@ async function syncToSupabase() {
   } catch(e) { console.warn('sync error', e); }
 }
 
-async function loadFromSupabase() {
+async function loadFromSupabase(showFeedback = false) {
   if (!_sbUser) return;
   const { data, error } = await sb.from('user_data').select('*').eq('user_id', _sbUser.id).maybeSingle();
-  if (error) { console.warn('loadFromSupabase error', error); return; }
-  if (!data) { await syncToSupabase(); return; }
+  if (error) {
+    console.warn('loadFromSupabase error', error);
+    if (showFeedback) showToast('❌ 동기화 실패: ' + (error.message || '연결 오류'));
+    return;
+  }
+  if (!data) {
+    // Supabase에 데이터 없음 → 로컬 데이터 업로드
+    await syncToSupabase();
+    if (showFeedback) showToast('☁️ 로컬 데이터를 클라우드에 저장했어요');
+    return;
+  }
 
   const supabaseTime = data.updated_at ? new Date(data.updated_at).getTime() : 0;
   const localTimeStr = localStorage.getItem('cl-local-updated-at');
@@ -3574,15 +3590,22 @@ async function loadFromSupabase() {
     await syncToSupabase();
     _lastSync = new Date();
     updateSyncInfo();
+    if (showFeedback) showToast('☁️ 최신 데이터를 클라우드에 저장했어요');
     return;
   }
 
-  // Supabase가 최신 — 단, 로컬에 데이터가 있는데 Supabase가 비어있으면 로컬 우선
+  // 로컬에 데이터가 있는데 Supabase가 비어있으면 로컬 우선
   const localLists = JSON.parse(localStorage.getItem('cl-lists') || '[]');
   const hasLocalData = localLists.some(l => l.items && l.items.length > 0);
   const hasSupaData  = data.lists && data.lists.some(l => l.items && l.items.length > 0);
-  if (hasLocalData && !hasSupaData) { await syncToSupabase(); return; }
+  if (hasLocalData && !hasSupaData) {
+    await syncToSupabase();
+    if (showFeedback) showToast('☁️ 로컬 데이터를 클라우드에 저장했어요');
+    return;
+  }
 
+  // Supabase 데이터 복원
+  const restoredAny = !!(data.lists || data.outfit_ootd || data.costco_history);
   if (data.lists)            { lists = data.lists; localStorage.setItem('cl-lists', JSON.stringify(lists)); }
   if (data.outfit_ootd)     { outfitDB = data.outfit_ootd.days || {}; outfitTmpls = data.outfit_ootd.templates || []; saveOutfit(); }
   if (data.costco_history)  { costcoHistory = data.costco_history; localStorage.setItem('costco-history', JSON.stringify(costcoHistory)); }
@@ -3590,6 +3613,7 @@ async function loadFromSupabase() {
   _lastSync = data.updated_at ? new Date(data.updated_at) : null;
   renderHome();
   updateSyncInfo();
+  if (showFeedback && restoredAny) showToast('✅ 클라우드 데이터를 복원했어요');
 }
 
 function updateSyncInfo() {
@@ -3646,9 +3670,9 @@ async function doLogin() {
   if (error) { showToast('❌ ' + (error.message === 'Invalid login credentials' ? '이메일 또는 비밀번호를 확인하세요' : error.message)); return; }
   _sbUser = data.user;
   updateAuthUI();
-  await loadFromSupabase();
   closeAuthSheet();
   showToast('✅ 로그인됐어요');
+  await loadFromSupabase(true);
 }
 
 async function doSignup() {
@@ -3703,6 +3727,45 @@ sb.auth.onAuthStateChange(async (event, session) => {
 });
 renderHome();
 initIcons();
+
+function exportBackup() {
+  const payload = {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    lists,
+    outfitOotd: { days: outfitDB, templates: outfitTmpls },
+    costcoHistory,
+    todoSuggestions,
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  const date = new Date().toISOString().slice(0, 10);
+  a.href = url; a.download = `checklist-backup-${date}.json`;
+  a.click(); URL.revokeObjectURL(url);
+  showToast('📥 백업 파일이 저장됐어요');
+}
+
+function importBackup(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async e => {
+    try {
+      const d = JSON.parse(e.target.result);
+      if (!d.lists) { showToast('❌ 올바른 백업 파일이 아니에요'); return; }
+      lists = d.lists;
+      if (d.outfitOotd)      { outfitDB = d.outfitOotd.days || {}; outfitTmpls = d.outfitOotd.templates || []; saveOutfit(); }
+      if (d.costcoHistory)   { costcoHistory = d.costcoHistory; localStorage.setItem('costco-history', JSON.stringify(costcoHistory)); }
+      if (d.todoSuggestions) { todoSuggestions = d.todoSuggestions; localStorage.setItem('todo-suggestions', JSON.stringify(todoSuggestions)); }
+      saveLists();
+      renderHome();
+      showToast('✅ 백업에서 복원됐어요');
+    } catch { showToast('❌ 파일을 읽을 수 없어요'); }
+    input.value = '';
+  };
+  reader.readAsText(file);
+}
 
 /* ─────────────────────────────────────────
    FORCE-SAVE ON APP HIDE / CLOSE (iOS PWA)
