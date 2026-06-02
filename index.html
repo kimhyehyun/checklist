@@ -3240,7 +3240,7 @@ function openEditSheet(itemId) {
   editTargetId = itemId;
   document.getElementById('editItemInput').value = item.name;
   const timeRow = document.getElementById('editTimeRow');
-  const isTodo = !!item.todoDate && currentListId !== 'outfit';
+  const isTodo = (isTodoType(currentListId) || !!item.todoDate) && currentListId !== 'outfit';
   timeRow.style.display = isTodo ? 'flex' : 'none';
   if (isTodo) document.getElementById('editTimeInput').value = item.time || '';
   const isDelivery = currentListId === 'delivery';
@@ -3313,7 +3313,7 @@ function confirmEdit() {
     if (i.id !== editTargetId) return i;
     const updated = { ...i, name };
     if (getList(currentListId)?.type === 'routine') updated.category = getEditFloor();
-    if (i.todoDate !== undefined) {
+    if (i.todoDate !== undefined || isTodoType(currentListId)) {
       updated.time = timeVal;
       if (!timeVal) delete updated.time;
       if (editDateSelected) updated.todoDate = editDateSelected;
