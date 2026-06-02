@@ -1693,7 +1693,10 @@ let overdueOpen      = true;
 let todoSuggestions  = JSON.parse(localStorage.getItem('todo-suggestions') || '[]');
 let selectedTodoDate = localDateStr(new Date());
 
-function saveLists() { localStorage.setItem('cl-lists', JSON.stringify(lists)); }
+function saveLists() {
+  localStorage.setItem('cl-lists', JSON.stringify(lists));
+  localStorage.setItem('cl-local-updated-at', new Date().toISOString());
+}
 function isTodoType(id) { return id === 'todo'; }
 
 /* ════ OOTD OUTFIT PLANNER ════ */
@@ -3457,9 +3460,28 @@ async function loadFromSupabase() {
   if (!_sbUser) return;
   const { data } = await sb.from('user_data').select('*').eq('user_id', _sbUser.id).maybeSingle();
   if (!data) { await syncToSupabase(); return; }
-  if (data.lists)           { lists = data.lists; localStorage.setItem('cl-lists', JSON.stringify(lists)); }
-  if (data.outfit_ootd)    { outfitDB = data.outfit_ootd.days || {}; outfitTmpls = data.outfit_ootd.templates || []; saveOutfit(); }
-  if (data.costco_history) { costcoHistory = data.costco_history; localStorage.setItem('costco-history', JSON.stringify(costcoHistory)); }
+
+  const supabaseTime = data.updated_at ? new Date(data.updated_at).getTime() : 0;
+  const localTimeStr = localStorage.getItem('cl-local-updated-at');
+  const localTime    = localTimeStr ? new Date(localTimeStr).getTime() : 0;
+
+  // 로컬이 더 최신이면 Supabase에 올리고 끝
+  if (localTime > supabaseTime) {
+    await syncToSupabase();
+    _lastSync = new Date();
+    updateSyncInfo();
+    return;
+  }
+
+  // Supabase가 최신 — 단, 로컬에 데이터가 있는데 Supabase가 비어있으면 로컬 우선
+  const localLists = JSON.parse(localStorage.getItem('cl-lists') || '[]');
+  const hasLocalData = localLists.some(l => l.items && l.items.length > 0);
+  const hasSupaData  = data.lists && data.lists.some(l => l.items && l.items.length > 0);
+  if (hasLocalData && !hasSupaData) { await syncToSupabase(); return; }
+
+  if (data.lists)            { lists = data.lists; localStorage.setItem('cl-lists', JSON.stringify(lists)); }
+  if (data.outfit_ootd)     { outfitDB = data.outfit_ootd.days || {}; outfitTmpls = data.outfit_ootd.templates || []; saveOutfit(); }
+  if (data.costco_history)  { costcoHistory = data.costco_history; localStorage.setItem('costco-history', JSON.stringify(costcoHistory)); }
   if (data.todo_suggestions){ todoSuggestions = data.todo_suggestions; localStorage.setItem('todo-suggestions', JSON.stringify(todoSuggestions)); }
   _lastSync = data.updated_at ? new Date(data.updated_at) : null;
   renderHome();
