@@ -3,8 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <meta name="color-scheme" content="dark" />
-  <title>checklist</title>
+  <meta name="color-scheme" content="light" />
+  <title>내 체크리스트</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet" />
 
   <!-- iOS PWA 홈 화면 아이콘 -->
   <link rel="apple-touch-icon" href="icon.png" />
@@ -14,29 +17,35 @@
 
   <!-- iOS PWA 설정 -->
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="내 체크리스트" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/simple-line-icons/2.5.5/css/simple-line-icons.min.css" />
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <style>
-    /* ─── Apple Dark Mode Tokens ─── */
+    /* ─── Uber Design Tokens ─── */
     :root {
-      --bg:       #000000;
-      --raised:   #1c1c1e;
-      --card:     #2c2c2e;
-      --card-2:   #3a3a3c;
-      --fill:     rgba(120,120,128,0.36);
-      --label:    #ffffff;
-      --label-2:  rgba(235,235,245,0.60);
-      --label-3:  rgba(235,235,245,0.30);
-      --label-4:  rgba(235,235,245,0.18);
-      --blue:     #0a84ff;
-      --blue-dim: rgba(10,132,255,0.25);
-      --red:      #ff453a;
-      --sep:      rgba(84,84,88,0.65);
-      --sep-soft: rgba(84,84,88,0.36);
-      --r-sm: 8px; --r-md: 11px; --r-lg: 18px; --r-pill: 9999px;
-      --f-d: SF Pro Display, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-      --f-t: SF Pro Text,    system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      /* surfaces */
+      --bg:       #ffffff;
+      --raised:   #efefef;
+      --card:     #ffffff;
+      --card-2:   #efefef;
+      --fill:     #efefef;
+      /* text */
+      --label:    #000000;
+      --label-2:  #5e5e5e;
+      --label-3:  #afafaf;
+      --label-4:  #e2e2e2;
+      /* accent — Uber uses pure black as its only CTA colour */
+      --blue:     #000000;
+      --blue-dim: #efefef;
+      /* semantic */
+      --red:      #c0392b;
+      --sep:      #e2e2e2;
+      --sep-soft: #f3f3f3;
+      /* shape */
+      --r-sm: 8px; --r-md: 12px; --r-lg: 16px; --r-pill: 999px;
+      /* type — Inter as open-source Uber substitute */
+      --f-d: 'Inter', system-ui, Helvetica Neue, Arial, sans-serif;
+      --f-t: 'Inter', system-ui, Helvetica Neue, Arial, sans-serif;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body {
@@ -47,6 +56,16 @@
       -webkit-font-smoothing: antialiased;
       position: relative;
     }
+
+    /* ─── Lucide Icon Sizes ─── */
+    [data-lucide] { display: inline-block; vertical-align: middle; }
+    .home-add-btn [data-lucide]    { width: 22px; height: 22px; stroke-width: 2.2; }
+    .back-btn [data-lucide]        { width: 18px; height: 18px; stroke-width: 2.2; }
+    .dtab-icon[data-lucide]        { width: 20px; height: 20px; stroke-width: 1.8; }
+    .otab-icon[data-lucide]        { width: 18px; height: 18px; stroke-width: 1.8; }
+    .list-chevron[data-lucide]     { width: 16px; height: 16px; stroke-width: 2; color: var(--label-3); }
+    .reset-opt-arrow[data-lucide]  { width: 16px; height: 16px; stroke-width: 2; color: var(--label-3); }
+    #todoTimeIcon[data-lucide]     { width: 16px; height: 16px; stroke-width: 1.8; }
 
     /* ─── App Shell ─── */
     #app {
@@ -64,14 +83,14 @@
     }
     .home-header {
       display: flex; align-items: center; justify-content: space-between;
-      background: rgba(28,28,30,0.88);
+      background: rgba(255,255,255,0.92);
       backdrop-filter: saturate(180%) blur(20px);
       -webkit-backdrop-filter: saturate(180%) blur(20px);
       border-bottom: 0.5px solid var(--sep-soft);
       padding: 0 20px; height: 56px; flex-shrink: 0;
     }
     .home-header h1 {
-      font-family: var(--f-d);
+      font-family: var(--f-d); font-weight: 700;
       font-size: 17px; font-weight: 600;
       color: var(--label); letter-spacing: -0.374px;
     }
@@ -102,8 +121,10 @@
       padding: 16px 18px;
       cursor: pointer; display: flex; align-items: center; gap: 14px;
       transition: opacity .15s, transform .15s;
+      box-shadow: rgba(0,0,0,0.08) 0px 2px 8px 0px;
+      border: 1px solid var(--sep);
     }
-    .list-card:active { opacity: 0.7; }
+    .list-card:active { background: var(--fill); }
     .list-card.drag-src { opacity: 0.35; }
     .list-card.drag-over-top { box-shadow: inset 0 3px 0 var(--blue); }
     .list-card.drag-over-bot { box-shadow: inset 0 -3px 0 var(--blue); }
@@ -124,9 +145,14 @@
     .item-row.drag-over-top { box-shadow: inset 0 3px 0 var(--blue); }
     .item-row.drag-over-bot { box-shadow: inset 0 -3px 0 var(--blue); }
     .list-icon {
-      width: 48px; height: 48px; border-radius: 12px;
+      width: 52px; height: 52px; border-radius: 14px;
       display: flex; align-items: center; justify-content: center;
-      font-size: 24px; flex-shrink: 0;
+      flex-shrink: 0;
+      background: var(--fill); border: 1px solid var(--sep);
+    }
+    .list-icon [data-lucide] {
+      width: 24px; height: 24px; stroke-width: 1.8;
+      color: var(--label);
     }
     .list-card-body { flex: 1; min-width: 0; }
     .list-card-name {
@@ -220,7 +246,7 @@
     /* Input bar */
     #detailInputBar {
       display: flex; flex-direction: column;
-      background: rgba(28,28,30,0.88);
+      background: rgba(255,255,255,0.92);
       backdrop-filter: saturate(180%) blur(20px);
       -webkit-backdrop-filter: saturate(180%) blur(20px);
       padding: 10px 16px 14px;
@@ -269,6 +295,21 @@
     }
     #editInputRow { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
     #editInputRow #editItemInput { margin-bottom: 0; flex: 1; }
+    #editDateRow { margin-bottom: 12px; }
+    .edit-date-chips {
+      display: flex; gap: 6px; overflow-x: auto;
+      -webkit-overflow-scrolling: touch; padding-bottom: 2px;
+    }
+    .edit-date-chips::-webkit-scrollbar { display: none; }
+    .edit-date-chip {
+      flex-shrink: 0; height: 36px; padding: 0 14px;
+      border: 1.5px solid var(--sep); border-radius: var(--r-pill);
+      background: var(--fill); color: var(--label-2);
+      font-size: 13px; font-weight: 500; cursor: pointer;
+      font-family: var(--f-t); white-space: nowrap;
+    }
+    .edit-date-chip.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+    .edit-date-chip:active { opacity: .7; }
     #editStoreRow { margin-bottom: 10px; }
     #editFloorRow { display: flex; gap: 6px; flex-shrink: 0; }
     #inputRow { display: flex; align-items: center; gap: 8px; }
@@ -293,7 +334,7 @@
     /* Detail tab bar (routine only) */
     #detailTabBar {
       display: none;
-      background: rgba(28,28,30,0.88);
+      background: rgba(255,255,255,0.92);
       backdrop-filter: saturate(180%) blur(20px);
       -webkit-backdrop-filter: saturate(180%) blur(20px);
       border-top: 0.5px solid var(--sep-soft);
@@ -305,7 +346,7 @@
     /* Outfit tab bar */
     #outfitTabBar {
       display: none; flex-shrink: 0;
-      background: rgba(28,28,30,0.88);
+      background: rgba(255,255,255,0.92);
       backdrop-filter: saturate(180%) blur(20px);
       -webkit-backdrop-filter: saturate(180%) blur(20px);
       border-top: 0.5px solid var(--sep-soft);
@@ -415,6 +456,8 @@
     .item-block {
       background: var(--card); border-radius: var(--r-lg);
       overflow: hidden; margin: 0 16px 2px;
+      box-shadow: rgba(0,0,0,0.06) 0px 2px 8px 0px;
+      border: 1px solid var(--sep);
     }
     .item-block.cart-block { opacity: 0.72; }
 
@@ -529,7 +572,7 @@
        QTY STEPPER SHEET
     ══════════════════════════════════════════ */
     #qtyOverlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+      position: fixed; inset: 0; background: rgba(0,0,0,0.45);
       display: none; align-items: flex-end; justify-content: center;
       z-index: 300; opacity: 0; transition: opacity .22s;
     }
@@ -584,7 +627,7 @@
        RESET DIALOG
     ══════════════════════════════════════════ */
     #resetDialogOverlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+      position: fixed; inset: 0; background: rgba(0,0,0,0.45);
       display: none; align-items: flex-end; justify-content: center;
       z-index: 300; opacity: 0; transition: opacity .22s;
     }
@@ -627,7 +670,7 @@
        ADD LIST SHEET
     ══════════════════════════════════════════ */
     #addListOverlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+      position: fixed; inset: 0; background: rgba(0,0,0,0.45);
       display: none; align-items: flex-end; justify-content: center;
       z-index: 300; opacity: 0; transition: opacity .22s;
     }
@@ -669,12 +712,13 @@
       gap: 8px; margin-bottom: 24px;
     }
     .emoji-opt {
-      width: 100%; aspect-ratio: 1; border: 1.5px solid transparent;
-      border-radius: 12px; background: var(--card-2);
-      font-size: 22px; cursor: pointer;
+      width: 100%; aspect-ratio: 1; border: 1.5px solid var(--sep);
+      border-radius: 12px; background: var(--fill);
+      cursor: pointer;
       display: flex; align-items: center; justify-content: center;
       transition: none;
     }
+    .emoji-opt [data-lucide] { width: 22px; height: 22px; stroke-width: 1.8; color: var(--label-2); }
     .emoji-opt:active { opacity: .8; }
     .emoji-opt.sel { border-color: var(--blue); background: var(--blue-dim); }
     #addListConfirmBtn {
@@ -691,7 +735,7 @@
        DELETE LIST SHEET
     ══════════════════════════════════════════ */
     #deleteListOverlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+      position: fixed; inset: 0; background: rgba(0,0,0,0.45);
       display: none; align-items: flex-end; justify-content: center;
       z-index: 300; opacity: 0; transition: opacity .22s;
     }
@@ -728,7 +772,7 @@
        EDIT ITEM SHEET
     ══════════════════════════════════════════ */
     #editOverlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+      position: fixed; inset: 0; background: rgba(0,0,0,0.45);
       display: none; align-items: flex-end; justify-content: center;
       z-index: 300; opacity: 0; transition: opacity .22s;
     }
@@ -813,7 +857,7 @@
     .day-add-btn:active { background: var(--fill); color: var(--label-2); }
 
     #dayOverlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+      position: fixed; inset: 0; background: rgba(0,0,0,0.45);
       display: none; align-items: flex-end; justify-content: center;
       z-index: 300; opacity: 0; transition: opacity .22s;
     }
@@ -883,7 +927,7 @@
     }
     .tdc.active .tdc-dot { background: rgba(255,255,255,0.85); }
     .tdc-dot-empty { width: 5px; height: 5px; flex-shrink: 0; }
-    .tdc.past { border-color: var(--sep-soft); background: rgba(28,28,30,0.5); }
+    .tdc.past { border-color: var(--sep-soft); background: rgba(0,0,0,0.04); }
     .tdc.past .tdc-day { color: var(--label-4); }
     .tdc.past .tdc-num { color: var(--label-3); }
 
@@ -1038,6 +1082,7 @@
       padding: 14px 16px; cursor: pointer;
       user-select: none; -webkit-user-select: none;
       transition: border-radius .22s;
+      border: 1px solid var(--sep);
     }
     .oacc-hdr.open {
       border-radius: var(--r-lg) var(--r-lg) 0 0;
@@ -1219,7 +1264,7 @@
         <button class="home-data-action-btn" onclick="importData()">복원</button>
         <button class="home-data-action-btn home-data-action-btn--blue" onclick="exportData()">백업</button>
         <button class="home-add-btn" onclick="openAddListSheet()">
-          <i class="icon-plus"></i>
+          <i data-lucide="plus"></i>
         </button>
       </div>
     </header>
@@ -1230,7 +1275,7 @@
   <div id="detailView">
     <header class="detail-header">
       <button class="back-btn" onclick="closeList()">
-        <i class="icon-arrow-left"></i> 뒤로
+        <i data-lucide="arrow-left"></i> 뒤로
       </button>
     </header>
     <div id="detailTitleBar">
@@ -1254,7 +1299,7 @@
           <button class="floor-chip active" data-floor="B1" onclick="selectFloor('B1')">B1</button>
         </div>
         <div id="todoTimeWrap" style="display:none">
-          <i class="icon-clock" id="todoTimeIcon"></i>
+          <i data-lucide="clock" id="todoTimeIcon"></i>
           <input id="todoTimeInput" type="time" />
         </div>
         <input id="newItemInput" type="text" placeholder="항목 추가"
@@ -1266,26 +1311,26 @@
 
     <nav id="detailTabBar">
       <button class="dtab-btn active" id="dtab0" onclick="switchDetailTab('shopping')">
-        <i class="dtab-icon icon-basket"></i>
+        <i data-lucide="shopping-cart" class="dtab-icon"></i>
         <span class="dtab-label">장보기</span>
       </button>
       <button class="dtab-btn" id="dtab1" onclick="switchDetailTab('history')">
-        <i class="dtab-icon icon-clock"></i>
+        <i data-lucide="clock" class="dtab-icon"></i>
         <span class="dtab-label">히스토리</span>
       </button>
     </nav>
 
     <nav id="outfitTabBar">
       <button class="otab-btn active" id="otab0" onclick="switchOutfitTab('planner')">
-        <i class="otab-icon icon-calendar"></i>
+        <i data-lucide="calendar" class="otab-icon"></i>
         <span class="otab-label">플래너</span>
       </button>
       <button class="otab-btn" id="otab1" onclick="switchOutfitTab('history')">
-        <i class="otab-icon icon-clock"></i>
+        <i data-lucide="clock" class="otab-icon"></i>
         <span class="otab-label">히스토리</span>
       </button>
       <button class="otab-btn" id="otab2" onclick="switchOutfitTab('templates')">
-        <i class="otab-icon icon-star"></i>
+        <i data-lucide="star" class="otab-icon"></i>
         <span class="otab-label">출근룩</span>
       </button>
     </nav>
@@ -1319,7 +1364,7 @@
             <span class="reset-opt-title">지난번 그대로</span>
             <span class="reset-opt-desc" id="resetOptLastDesc">마지막 장보기 목록 불러오기</span>
           </div>
-          <i class="icon-arrow-right reset-opt-arrow"></i>
+          <i data-lucide="chevron-right" class="reset-opt-arrow"></i>
         </button>
         <button class="reset-option-btn" onclick="doReset('defaults')">
           <span class="reset-opt-icon">⭐</span>
@@ -1327,7 +1372,7 @@
             <span class="reset-opt-title">자주 사는 기본 목록</span>
             <span class="reset-opt-desc">물, 쫄이간식 등 고정 멤버</span>
           </div>
-          <i class="icon-arrow-right reset-opt-arrow"></i>
+          <i data-lucide="chevron-right" class="reset-opt-arrow"></i>
         </button>
         <button class="reset-option-btn" onclick="doReset('empty')">
           <span class="reset-opt-icon">🗒️</span>
@@ -1335,7 +1380,7 @@
             <span class="reset-opt-title">빈 목록으로 시작</span>
             <span class="reset-opt-desc">직접 추가하며 시작</span>
           </div>
-          <i class="icon-arrow-right reset-opt-arrow"></i>
+          <i data-lucide="chevron-right" class="reset-opt-arrow"></i>
         </button>
       </div>
       <button class="reset-cancel-btn" onclick="hideResetDialog()">취소</button>
@@ -1362,6 +1407,9 @@
           <button class="floor-chip" id="editFloor1F" onclick="setEditFloor('1F')">1F</button>
           <button class="floor-chip active" id="editFloorB1" onclick="setEditFloor('B1')">B1</button>
         </div>
+      </div>
+      <div id="editDateRow" style="display:none">
+        <div id="editDateChips" class="edit-date-chips"></div>
       </div>
       <div id="editTimeRow">
         <input id="editTimeInput" type="time" />
@@ -1489,27 +1537,27 @@ function getStoreValue(chipsId, customId) {
   return sel.textContent;
 }
 
-const EMOJI_SET   = [
-  '📝','✅','📋','🗒️','📌','🔖','📎',
-  '🛒','🛍','📦','🧺','🏠','🔑','🧹',
-  '💊','🏥','💉','🩺','🧴','🪥','🛁',
-  '🍔','🍜','🥗','🍳','☕','🧃','🍷',
-  '💪','🏃','🧘','⚽','🏋️','🚴','🥊',
-  '📚','✏️','🎓','💻','📱','🎧','🎮',
-  '💰','💳','📈','🏦','💵','🎁','🛫',
-  '👗','👠','👒','👜','💄','💍','🧣',
-  '🐶','🐱','🌿','🌸','🌙','⭐','🔥',
+const EMOJI_SET = [
+  'clipboard-list','check-square','list','bookmark','pin','tag','paperclip',
+  'shopping-cart','shopping-bag','package','archive','home','key','brush',
+  'pill','heart-pulse','syringe','stethoscope','droplets','toothbrush','bath',
+  'burger','soup','salad','egg-fried','coffee','juice','wine',
+  'dumbbell','run','yoga','trophy','bike','boxing','target',
+  'book-open','pencil','graduation-cap','laptop','smartphone','headphones','gamepad-2',
+  'wallet','credit-card','trending-up','building-2','banknote','gift','plane',
+  'shirt','footprints','sun','umbrella','gem','sparkles','scissors',
+  'dog','cat','leaf','flower-2','moon','star','flame',
 ];
 const DAYS        = ['월','화','수','목','금','토','일'];
 const COLOR_SET   = ['#2a1c3a','#1c3a5e','#3a2a1c','#1c3a2a','#3a1c1c','#1c1c3a','#3a3a1c','#1c2a3a'];
 
 const INITIAL_LISTS = [
-  { id:'costco',   name:'코스트코 장보기', icon:'🛒', color:'#1c3a5e', type:'routine',
+  { id:'costco',   name:'코스트코 장보기', icon:'shopping-cart',  color:'#1c3a5e', type:'routine',
     categories:['1F','B1'], items: [] },
-  { id:'delivery', name:'택배 올 것',    icon:'📦', color:'#3a2a1c', type:'general', items:[] },
-  { id:'shopping', name:'쇼핑하기',      icon:'🛍', color:'#1c3a2a', type:'general', items:[] },
-  { id:'todo',     name:'할 일',         icon:'📝', color:'#2a1c3a', type:'general', items:[] },
-  { id:'outfit',   name:'오늘 뭐 입지?',   icon:'👗', color:'#3a1c2e', type:'general', items:[] },
+  { id:'delivery', name:'택배 올 것',    icon:'package',        color:'#3a2a1c', type:'general', items:[] },
+  { id:'shopping', name:'쇼핑하기',      icon:'shopping-bag',   color:'#1c3a2a', type:'general', items:[] },
+  { id:'todo',     name:'할 일',         icon:'clipboard-list', color:'#2a1c3a', type:'general', items:[] },
+  { id:'outfit',   name:'오늘 뭐 입지?',  icon:'shirt',          color:'#3a1c2e', type:'general', items:[] },
 ];
 
 /* ─────────────────────────────────────────
@@ -1519,7 +1567,7 @@ const _stored = (() => { try { const p = JSON.parse(localStorage.getItem('cl-lis
 let lists = [
   ...INITIAL_LISTS.map(init => {
     const s = _stored.find(l => l && l.id === init.id);
-    return s ? { ...s, type: init.type, name: init.name, items: Array.isArray(s.items) ? s.items : [] } : { ...init };
+    return s ? { ...s, type: init.type, name: init.name, icon: init.icon, items: Array.isArray(s.items) ? s.items : [] } : { ...init };
   }),
   ..._stored.filter(l => l && l.id && !INITIAL_LISTS.some(i => i.id === l.id)),
 ];
@@ -1536,7 +1584,7 @@ let activeTab      = 'shopping';
 let selectedFloor  = 'B1';
 let qtyTargetId    = null;
 let qtyTemp        = 1;
-let addListEmoji   = '📝';
+let addListEmoji   = 'clipboard-list';
 let addListColor   = COLOR_SET[0];
 let editTargetId   = null;
 let selectedDay    = null;
@@ -1544,7 +1592,7 @@ let dayTargetId    = null;
 let todoCheckedOpen  = true;
 let overdueOpen      = true;
 let todoSuggestions  = JSON.parse(localStorage.getItem('todo-suggestions') || '[]');
-let selectedTodoDate = new Date().toISOString().split('T')[0];
+let selectedTodoDate = localDateStr(new Date());
 
 function saveLists() { localStorage.setItem('cl-lists', JSON.stringify(lists)); }
 function isTodoType(id) { return id === 'todo'; }
@@ -1612,7 +1660,7 @@ function outfitQuickFill() {
 }
 function openOutfitCopySheet(weekDays) {
   outfitSaveInputs();
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = localDateStr(new Date());
   const KR = ['일','월','화','수','목','금','토'];
   const grid = document.getElementById('outfitCopyGrid');
   grid.innerHTML = '';
@@ -1864,14 +1912,14 @@ function renderHome() {
       : `항목 ${list.items.length}개`;
     div.innerHTML = `
       <div class="drag-handle">⠿</div>
-      <div class="list-icon" style="background:${list.color}">${list.icon}</div>
+      <div class="list-icon"><i data-lucide="${list.icon}"></i></div>
       <div class="list-card-body">
         <div class="list-card-name">${list.name}</div>
         <div class="list-card-meta">${metaText}</div>
       </div>
       <div class="list-card-right">
         <div class="list-card-count">${remaining}</div>
-        <i class="icon-arrow-right list-chevron"></i>
+        <i data-lucide="chevron-right" class="list-chevron"></i>
       </div>`;
     div.querySelector('.drag-handle').addEventListener('pointerdown', e => startListDrag(e, list.id, div));
     div.addEventListener('click', e => { if (!e.target.closest('.drag-handle')) openList(list.id); });
@@ -1902,6 +1950,7 @@ function renderHome() {
   btn.addEventListener('click', openAddListSheet);
   wrap.appendChild(btn);
   scroll.appendChild(wrap);
+  setTimeout(initIcons, 0);
 }
 
 /* ─────────────────────────────────────────
@@ -1927,7 +1976,7 @@ function openList(id) {
   if (list.type === 'routine') {
     document.getElementById('detailResetBtn').style.display = '';
     document.getElementById('detailTabBar').classList.add('visible');
-    document.getElementById('dtab0').querySelector('.dtab-icon').className = 'dtab-icon icon-basket';
+    document.getElementById('dtab0').querySelector('.dtab-icon').setAttribute('data-lucide','shopping-cart');
     document.getElementById('dtab0').querySelector('.dtab-label').textContent = '장보기';
     document.getElementById('dtab1').querySelector('.dtab-label').textContent = '히스토리';
     document.getElementById('floorSelector').style.display = 'flex';
@@ -1954,7 +2003,7 @@ function openList(id) {
     document.getElementById('detailInputBar').style.display = 'none';
     renderOutfitContent();
   } else if (isTodoType(id)) {
-    selectedTodoDate = new Date().toISOString().split('T')[0];
+    selectedTodoDate = localDateStr(new Date());
     document.getElementById('detailResetBtn').style.display = 'none';
     document.getElementById('detailTabBar').classList.remove('visible');
     document.getElementById('floorSelector').style.display = 'none';
@@ -1978,6 +2027,7 @@ function openList(id) {
   }
 
   document.getElementById('detailView').classList.add('open');
+  setTimeout(initIcons, 50);
 }
 
 function closeList() {
@@ -2290,7 +2340,7 @@ function renderDetail() {
 ───────────────────────────────────────── */
 function toggleCheck(itemId) {
   const list = getList(currentListId);
-  const today = new Date().toISOString().split('T')[0];
+  const today = localDateStr(new Date());
   list.items = list.items.map(i => {
     if (i.id !== itemId) return i;
     const nowChecked = !i.checked;
@@ -2609,7 +2659,7 @@ function renderOutfitTemplateList() {
     const applyBtn = document.createElement('button');
     applyBtn.className = 'otmpl-card-apply'; applyBtn.textContent = '오늘에 적용';
     applyBtn.addEventListener('click', () => {
-      const todayStr = new Date().toISOString().split('T')[0];
+      const todayStr = localDateStr(new Date());
       const day = outfitDayData(todayStr);
       OUTFIT_CATS.forEach(c => { day[c.key] = tmpl[c.key] || ''; });
       day.checked = {}; saveOutfit();
@@ -2691,7 +2741,7 @@ function renderOutfitContent() {
   const el = document.getElementById('detailContent');
   el.innerHTML = '';
 
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = localDateStr(new Date());
   if (!outfitDay) outfitDay = todayStr;
   if (!_outfitOpen) _outfitOpen = new Set([todayStr]);
 
@@ -2856,7 +2906,7 @@ function renderTodoContent(list) {
   const el = document.getElementById('detailContent');
   el.innerHTML = '';
 
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = localDateStr(new Date());
   const DOW = ['일','월','화','수','목','금','토'];
 
   // ── 날짜 칩 바 (과거 7일 + 오늘 + 미래 10일) ──
@@ -2865,7 +2915,7 @@ function renderTodoContent(list) {
   let todayChipEl = null;
   for (let i = -7; i <= 10; i++) {
     const d = new Date(); d.setDate(d.getDate() + i);
-    const dateStr = d.toISOString().split('T')[0];
+    const dateStr = localDateStr(d);
     const isPast = i < 0;
     const dayLabel = i === 0 ? '오늘' : i === 1 ? '내일' : DOW[d.getDay()];
     const hasItems = list.items.some(it => (it.todoDate || todayStr) === dateStr && !it.checked);
@@ -2891,34 +2941,6 @@ function renderTodoContent(list) {
   const unchecked = dateItems.filter(i => !i.checked);
   const checked   = dateItems.filter(i =>  i.checked);
 
-  // ── 지난 미완료 항목 (오늘 탭에서만 표시) ──
-  if (selectedTodoDate === todayStr) {
-    const overdue = list.items.filter(i => !i.checked && (i.todoDate || todayStr) < todayStr);
-    if (overdue.length) {
-      const tog = document.createElement('div');
-      tog.className = 'overdue-toggle' + (overdueOpen ? ' open' : '');
-      tog.innerHTML = `<span class="overdue-toggle-label">지난 일정 ${overdue.length}개</span><span class="overdue-toggle-icon">⌄</span>`;
-      const overdueBlock = document.createElement('div');
-      overdueBlock.className = 'item-block';
-      overdueBlock.style.cssText = `margin:0 16px 2px;display:${overdueOpen?'':'none'}`;
-      overdue.forEach(item => {
-        const row = makeTodoRow(item, false);
-        const dateTag = document.createElement('span');
-        dateTag.className = 'overdue-date-tag';
-        const d = new Date(item.todoDate + 'T00:00:00');
-        dateTag.textContent = `${d.getMonth()+1}/${d.getDate()}`;
-        row.querySelector('.item-name').after(dateTag);
-        overdueBlock.appendChild(row);
-      });
-      tog.addEventListener('click', () => {
-        overdueOpen = !overdueOpen;
-        tog.classList.toggle('open', overdueOpen);
-        overdueBlock.style.display = overdueOpen ? '' : 'none';
-      });
-      el.appendChild(tog);
-      el.appendChild(overdueBlock);
-    }
-  }
 
   if (!unchecked.length && !checked.length) {
     const empty = document.createElement('div');
@@ -3003,8 +3025,9 @@ function renderTodoHistoryContent(list) {
   const pad = document.createElement('div'); pad.style.height = '12px';
   el.appendChild(pad);
 
-  const today = new Date().toISOString().split('T')[0];
-  const yesterday = new Date(Date.now()-86400000).toISOString().split('T')[0];
+  const today = localDateStr(new Date());
+  const _yd = new Date(); _yd.setDate(_yd.getDate() - 1);
+  const yesterday = localDateStr(_yd);
   const grouped = {};
   checked.forEach(i => { const d = i.completedDate||'기타'; if(!grouped[d]) grouped[d]=[]; grouped[d].push(i); });
 
@@ -3128,11 +3151,42 @@ function openEditSheet(itemId) {
   const isRoutine = getList(currentListId)?.type === 'routine';
   document.getElementById('editFloorRow').style.display = isRoutine ? 'flex' : 'none';
   if (isRoutine) setEditFloor(item.category || 'B1');
+  const dateRow = document.getElementById('editDateRow');
+  dateRow.style.display = isTodo ? '' : 'none';
+  if (isTodo) renderEditDateChips(item.todoDate || localDateStr(new Date()));
   const o = document.getElementById('editOverlay');
   o.style.display = 'flex';
   requestAnimationFrame(() => o.classList.add('show'));
   setTimeout(() => document.getElementById('editItemInput').focus(), 280);
 }
+let editDateSelected = null;
+
+function renderEditDateChips(currentDate) {
+  const bar = document.getElementById('editDateChips');
+  bar.innerHTML = '';
+  editDateSelected = currentDate;
+  const todayStr = localDateStr(new Date());
+  const DOW = ['일','월','화','수','목','금','토'];
+  for (let i = -3; i <= 7; i++) {
+    const d = new Date(); d.setDate(d.getDate() + i);
+    const ds = localDateStr(d);
+    const chip = document.createElement('button');
+    chip.className = 'edit-date-chip' + (ds === editDateSelected ? ' active' : '');
+    const label = i === 0 ? '오늘' : i === -1 ? '어제' : i === 1 ? '내일'
+      : `${d.getMonth()+1}/${d.getDate()}(${DOW[d.getDay()]})`;
+    chip.textContent = label;
+    chip.addEventListener('click', () => {
+      editDateSelected = ds;
+      bar.querySelectorAll('.edit-date-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+    });
+    bar.appendChild(chip);
+    if (ds === editDateSelected) setTimeout(() => {
+      chip.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+    }, 60);
+  }
+}
+
 function setEditFloor(floor) {
   document.getElementById('editFloor1F').classList.toggle('active', floor === '1F');
   document.getElementById('editFloorB1').classList.toggle('active', floor === 'B1');
@@ -3164,6 +3218,7 @@ function confirmEdit() {
     if (i.todoDate !== undefined) {
       updated.time = timeVal;
       if (!timeVal) delete updated.time;
+      if (editDateSelected) updated.todoDate = editDateSelected;
     }
     if (currentListId === 'delivery') {
       updated.store = storeVal;
@@ -3209,25 +3264,26 @@ function confirmDeleteList() {
    ADD LIST SHEET
 ───────────────────────────────────────── */
 function openAddListSheet() {
-  addListEmoji = '📝';
+  addListEmoji = 'clipboard-list';
   addListColor = COLOR_SET[0];
   document.getElementById('addListNameInput').value = '';
   document.getElementById('addListConfirmBtn').disabled = true;
 
   const grid = document.getElementById('emojiGrid');
   grid.innerHTML = '';
-  EMOJI_SET.forEach((em, i) => {
+  EMOJI_SET.forEach((iconName, i) => {
     const btn = document.createElement('button');
-    btn.className = 'emoji-opt' + (em === addListEmoji ? ' sel' : '');
-    btn.textContent = em;
+    btn.className = 'emoji-opt' + (iconName === addListEmoji ? ' sel' : '');
+    btn.innerHTML = `<i data-lucide="${iconName}"></i>`;
     btn.addEventListener('click', () => {
-      addListEmoji = em;
+      addListEmoji = iconName;
       addListColor = COLOR_SET[i % COLOR_SET.length];
       grid.querySelectorAll('.emoji-opt').forEach(b => b.classList.remove('sel'));
       btn.classList.add('sel');
     });
     grid.appendChild(btn);
   });
+  setTimeout(initIcons, 0);
 
   const o = document.getElementById('addListOverlay');
   o.style.display = 'flex';
@@ -3263,7 +3319,9 @@ function confirmAddList() {
 /* ─────────────────────────────────────────
    INIT
 ───────────────────────────────────────── */
+function initIcons() { if (typeof lucide !== 'undefined') lucide.createIcons(); }
 renderHome();
+initIcons();
 
 /* ─────────────────────────────────────────
    FORCE-SAVE ON APP HIDE / CLOSE (iOS PWA)
