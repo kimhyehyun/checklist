@@ -139,7 +139,7 @@
     .item-drag-handle {
       display: flex; align-items: center; flex-shrink: 0;
       color: var(--label-4); font-size: 15px; line-height: 1;
-      padding: 0 2px 0 0; touch-action: none; cursor: grab;
+      padding: 0 12px 0 0; touch-action: none; cursor: grab;
       user-select: none; -webkit-user-select: none;
     }
     .item-row.drag-src { opacity: 0.3; }
@@ -1970,6 +1970,7 @@ let _itemDrag = null;
 function startItemDrag(e, itemId, rowEl) {
   e.preventDefault();
   e.stopPropagation();
+  rowEl._dragStarted = true;
   rowEl.setPointerCapture(e.pointerId);
 
   const rect = rowEl.getBoundingClientRect();
@@ -2023,6 +2024,8 @@ function onItemDragEnd(e) {
   _itemDrag.rowEl.removeEventListener('pointermove', onItemDragMove);
   _itemDrag.clone.remove();
   _itemDrag.rowEl.classList.remove('drag-src');
+  const _endedRow = _itemDrag.rowEl;
+  setTimeout(() => { delete _endedRow._dragStarted; }, 200);
   document.querySelectorAll('.item-row.drag-over-top,.item-row.drag-over-bot').forEach(el => {
     el.classList.remove('drag-over-top', 'drag-over-bot');
   });
@@ -2357,7 +2360,7 @@ function renderGeneralContent(list) {
         : ''}
       <button class="del-btn" data-did="${item.id}">×</button>
     `;
-    row.addEventListener('click', e => { if (!e.target.closest('.item-drag-handle')) toggleCheck(item.id); });
+    row.addEventListener('click', e => { if (row._dragStarted || e.target.closest('.item-drag-handle')) return; toggleCheck(item.id); });
     addLongPress(row, () => openEditSheet(item.id));
     if (!isChecked) row.querySelector('.item-drag-handle').addEventListener('pointerdown', e => startItemDrag(e, item.id, row));
     const qtyEl = row.querySelector('[data-qid]');
@@ -3150,7 +3153,7 @@ function makeTodoRow(item, isChecked) {
     ${item.isRecord && !isChecked ? '<span class="record-badge">기록</span>' : ''}
     <button class="del-btn" data-did="${item.id}">×</button>
   `;
-  row.addEventListener('click', e => { if (!e.target.closest('.item-drag-handle')) toggleCheck(item.id); });
+  row.addEventListener('click', e => { if (row._dragStarted || e.target.closest('.item-drag-handle')) return; toggleCheck(item.id); });
   addLongPress(row, () => openEditSheet(item.id));
   if (!isChecked) row.querySelector('.item-drag-handle').addEventListener('pointerdown', e => startItemDrag(e, item.id, row));
   row.querySelector('[data-did]').addEventListener('click', e => {
@@ -3367,13 +3370,14 @@ function openTodoCopySheet() {
   todoCopySelectedDate = null;
   const todayStr = localDateStr(new Date());
   const DOW = ['일','월','화','수','목','금','토'];
+  const todayBase = new Date(); todayBase.setHours(0,0,0,0);
   for (let i = 0; i <= 14; i++) {
     const d = new Date(); d.setDate(d.getDate() + i);
     const ds = localDateStr(d);
-    if (ds === (editDateSelected || todayStr)) continue; // 현재 날짜 제외
     const chip = document.createElement('button');
     chip.className = 'edit-date-chip';
-    const label = i === 0 ? '오늘' : i === 1 ? '내일'
+    const diff = Math.round((d - todayBase) / 86400000);
+    const label = diff === 0 ? '오늘' : diff === 1 ? '내일'
       : `${d.getMonth()+1}/${d.getDate()}(${DOW[d.getDay()]})`;
     chip.textContent = label;
     chip.addEventListener('click', () => {
