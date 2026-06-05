@@ -138,8 +138,8 @@
     /* item-level drag */
     .item-drag-handle {
       display: flex; align-items: center; flex-shrink: 0;
-      color: var(--label-4); font-size: 15px; line-height: 1;
-      padding: 0 12px 0 0; touch-action: none; cursor: grab;
+      color: var(--label-3); font-size: 15px; line-height: 1;
+      padding: 0 0 0 4px; touch-action: none; cursor: grab;
       user-select: none; -webkit-user-select: none;
     }
     .item-row.drag-src { opacity: 0.3; }
@@ -467,9 +467,22 @@
       padding: 0 18px; min-height: 54px;
       border-bottom: 0.5px solid var(--sep-soft);
       cursor: pointer; gap: 8px;
+      background: var(--card);
+      transition: transform .22s cubic-bezier(.4,0,.2,1);
+      position: relative; z-index: 1;
     }
-    .item-row:last-child { border-bottom: none; }
+    .item-block > .item-row:last-child,
+    .swipe-wrap:last-child > .item-row { border-bottom: none; }
     .item-row:active { background: var(--fill); }
+    .item-row.swipe-open { transform: translateX(-75px); }
+    .swipe-wrap { position: relative; }
+    .swipe-del-reveal {
+      position: absolute; right: 0; top: 0; bottom: 0; width: 75px;
+      background: var(--red);
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--f-t); font-size: 14px; font-weight: 600; color: #fff;
+      cursor: pointer; user-select: none; -webkit-user-select: none;
+    }
 
     .checkbox {
       width: 22px; height: 22px; border-radius: var(--r-pill);
@@ -1368,7 +1381,7 @@
       <div id="authLoggedOut">
         <div class="auth-title">클라우드 동기화</div>
         <form onsubmit="doLogin();return false" autocomplete="on">
-          <input id="authEmail" class="auth-input" type="email" placeholder="이메일" autocomplete="email" enterkeyhint="next" />
+          <input id="authEmail" class="auth-input" type="email" placeholder="이메일" autocomplete="email" enterkeyhint="next" value="khh@northstar.co.kr" />
           <div style="position:relative">
             <input id="authPw" class="auth-input" type="password" placeholder="비밀번호" autocomplete="current-password"
               enterkeyhint="done" style="padding-right:48px;width:100%" />
@@ -1966,8 +1979,70 @@ function onListDragEnd(e) {
 
 /* ── Item drag-to-reorder ── */
 let _itemDrag = null;
+let _openSwipeRow = null;
+
+function closeCurrentSwipe() {
+  if (!_openSwipeRow) return;
+  _openSwipeRow.classList.remove('swipe-open');
+  _openSwipeRow.style.transform = '';
+  _openSwipeRow = null;
+}
+
+function addSwipeDelete(wrap, row, itemId) {
+  const DEL_W = 75, THRESH = 36;
+  let sx, sy, tracking = false, isHoriz = false, dx = 0;
+
+  row.addEventListener('touchstart', e => {
+    if (e.target.closest('.item-drag-handle')) return;
+    if (row.classList.contains('swipe-open')) { row._closingSwipe = true; return; }
+    if (_openSwipeRow && _openSwipeRow !== row) closeCurrentSwipe();
+    const t = e.touches[0];
+    sx = t.clientX; sy = t.clientY;
+    tracking = true; isHoriz = false; dx = 0;
+  }, { passive: true });
+
+  row.addEventListener('touchmove', e => {
+    if (!tracking) return;
+    const t = e.touches[0];
+    dx = t.clientX - sx;
+    const dy = Math.abs(t.clientY - sy);
+    if (!isHoriz) {
+      if (Math.abs(dx) < 6) return;
+      if (Math.abs(dx) > dy) isHoriz = true;
+      else { tracking = false; return; }
+    }
+    if (dx > 0) { tracking = false; return; }
+    e.preventDefault();
+    row.style.transition = 'none';
+    row.style.transform = `translateX(${Math.max(dx, -DEL_W)}px)`;
+  }, { passive: false });
+
+  const endTouch = () => {
+    if (!tracking || !isHoriz) { tracking = false; return; }
+    tracking = false;
+    row.style.transition = '';
+    if (dx < -THRESH) {
+      row.style.transform = '';
+      row.classList.add('swipe-open');
+      _openSwipeRow = row;
+    } else {
+      row.style.transform = '';
+      row.classList.remove('swipe-open');
+      if (_openSwipeRow === row) _openSwipeRow = null;
+    }
+  };
+  row.addEventListener('touchend', endTouch);
+  row.addEventListener('touchcancel', () => {
+    tracking = false; row.style.transition = ''; row.style.transform = '';
+  });
+
+  wrap.querySelector('.swipe-del-reveal').addEventListener('click', e => {
+    e.stopPropagation(); _openSwipeRow = null; deleteItem(itemId);
+  });
+}
 
 function startItemDrag(e, itemId, rowEl) {
+  closeCurrentSwipe();
   e.preventDefault();
   e.stopPropagation();
   rowEl._dragStarted = true;
@@ -2007,7 +2082,8 @@ function onItemDragMove(e) {
   document.querySelectorAll('.item-row.drag-over-top,.item-row.drag-over-bot').forEach(el => {
     el.classList.remove('drag-over-top', 'drag-over-bot');
   });
-  const target = under?.closest('.item-row[data-iid]');
+  let target = under?.closest('.item-row[data-iid]');
+  if (!target) { const sw = under?.closest('.swipe-wrap'); if (sw) target = sw.querySelector('.item-row[data-iid]'); }
   if (target && target !== _itemDrag.rowEl) {
     const r = target.getBoundingClientRect();
     const isTop = e.clientY < r.top + r.height / 2;
@@ -2334,6 +2410,13 @@ function renderGeneralContent(list) {
   const checked   = list.items.filter(i =>  i.checked);
 
   function makeRow(item, isChecked) {
+    const wrap = document.createElement('div');
+    wrap.className = 'swipe-wrap';
+    const delReveal = document.createElement('div');
+    delReveal.className = 'swipe-del-reveal';
+    delReveal.textContent = '삭제';
+    wrap.appendChild(delReveal);
+
     const row = document.createElement('div');
     row.className = 'item-row' + (isChecked ? ' checked-row' : '');
     row.dataset.iid = item.id;
@@ -2344,7 +2427,6 @@ function renderGeneralContent(list) {
          </svg>` : '';
     const isDeliveryList = list.id === 'delivery';
     row.innerHTML = `
-      ${!isChecked ? '<div class="item-drag-handle">⠿</div>' : ''}
       <div class="checkbox">${checkInner}</div>
       <span class="item-name">${item.name}</span>
       ${isDeliveryList && item.store ? `<span class="store-badge">${item.store}</span>` : ''}
@@ -2358,23 +2440,27 @@ function renderGeneralContent(list) {
           ? `<span class="qty-badge" data-qid="${item.id}">×${item.qty}</span>`
           : `<button class="qty-add-btn" data-qid="${item.id}">+수량</button>`)
         : ''}
-      <button class="del-btn" data-did="${item.id}">×</button>
+      ${!isChecked ? '<div class="item-drag-handle">⠿</div>' : ''}
     `;
-    row.addEventListener('click', e => { if (row._dragStarted || e.target.closest('.item-drag-handle')) return; toggleCheck(item.id); });
+    wrap.appendChild(row);
+
+    row.addEventListener('click', e => {
+      if (row._closingSwipe) { row._closingSwipe = false; closeCurrentSwipe(); return; }
+      if (row._dragStarted || e.target.closest('.item-drag-handle')) return;
+      toggleCheck(item.id);
+    });
     addLongPress(row, () => openEditSheet(item.id));
     if (!isChecked) row.querySelector('.item-drag-handle').addEventListener('pointerdown', e => startItemDrag(e, item.id, row));
     const qtyEl = row.querySelector('[data-qid]');
     if (qtyEl) qtyEl.addEventListener('click', e => {
       e.stopPropagation(); openQtySheet(item.id);
     });
-    row.querySelector('[data-did]').addEventListener('click', e => {
-      e.stopPropagation(); deleteItem(item.id);
-    });
     const dayEl = row.querySelector('[data-dayid]');
     if (dayEl) dayEl.addEventListener('click', e => {
       e.stopPropagation(); openDaySheet(item.id);
     });
-    return row;
+    addSwipeDelete(wrap, row, item.id);
+    return wrap;
   }
 
   if (unchecked.length) {
@@ -3137,6 +3223,13 @@ function renderTodoContent(list) {
 }
 
 function makeTodoRow(item, isChecked) {
+  const wrap = document.createElement('div');
+  wrap.className = 'swipe-wrap';
+  const delReveal = document.createElement('div');
+  delReveal.className = 'swipe-del-reveal';
+  delReveal.textContent = '삭제';
+  wrap.appendChild(delReveal);
+
   const row = document.createElement('div');
   row.className = 'item-row' + (isChecked ? ' checked-row' : '') + (item.isRecord && !isChecked ? ' record-row' : '');
   row.dataset.iid = item.id;
@@ -3146,20 +3239,23 @@ function makeTodoRow(item, isChecked) {
            stroke-linecap="round" stroke-linejoin="round"/>
        </svg>` : '';
   row.innerHTML = `
-    ${!isChecked ? '<div class="item-drag-handle">⠿</div>' : ''}
     <div class="checkbox">${checkInner}</div>
     ${item.time ? `<span class="time-badge">${item.time}</span>` : ''}
     <span class="item-name">${item.name}</span>
     ${item.isRecord && !isChecked ? '<span class="record-badge">기록</span>' : ''}
-    <button class="del-btn" data-did="${item.id}">×</button>
+    ${!isChecked ? '<div class="item-drag-handle">⠿</div>' : ''}
   `;
-  row.addEventListener('click', e => { if (row._dragStarted || e.target.closest('.item-drag-handle')) return; toggleCheck(item.id); });
+  wrap.appendChild(row);
+
+  row.addEventListener('click', e => {
+    if (row._closingSwipe) { row._closingSwipe = false; closeCurrentSwipe(); return; }
+    if (row._dragStarted || e.target.closest('.item-drag-handle')) return;
+    toggleCheck(item.id);
+  });
   addLongPress(row, () => openEditSheet(item.id));
   if (!isChecked) row.querySelector('.item-drag-handle').addEventListener('pointerdown', e => startItemDrag(e, item.id, row));
-  row.querySelector('[data-did]').addEventListener('click', e => {
-    e.stopPropagation(); deleteItem(item.id);
-  });
-  return row;
+  addSwipeDelete(wrap, row, item.id);
+  return wrap;
 }
 
 /* ─────────────────────────────────────────
