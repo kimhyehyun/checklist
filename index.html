@@ -39,7 +39,7 @@
       --blue:     #000000;
       --blue-dim: #efefef;
       /* semantic */
-      --red:      #c0392b;
+      --red:      #ff3b30;
       --sep:      #e2e2e2;
       --sep-soft: #f3f3f3;
       /* shape */
@@ -1291,12 +1291,6 @@
       font-size: 11px; color: var(--label-4);
       background: var(--fill); border-radius: var(--r-pill);
       padding: 2px 7px; flex-shrink: 0;
-    }
-    .record-row { border-left: 3px solid var(--blue); padding-left: 15px !important; }
-    .record-badge {
-      font-size: 11px; color: var(--blue);
-      background: var(--blue-dim); border-radius: var(--r-pill);
-      padding: 2px 8px; flex-shrink: 0;
     }
     .checked-toggle {
       display: flex; justify-content: space-between; align-items: center;
@@ -2618,7 +2612,6 @@ function addItem() {
     id: `temp-${Date.now()}`, name, checked: false,
     ...(list.type === 'routine' ? { category: selectedFloor, isDefault: false } : {}),
     ...(isTodoType(currentListId) ? {
-      isRecord: isRecordType(name),
       todoDate: selectedTodoDate,
       ...(currentListId === 'todo' ? { time: document.getElementById('todoTimeInput').value || undefined } : {}),
     } : {}),
@@ -3232,7 +3225,7 @@ function makeTodoRow(item, isChecked) {
   wrap.appendChild(delReveal);
 
   const row = document.createElement('div');
-  row.className = 'item-row' + (isChecked ? ' checked-row' : '') + (item.isRecord && !isChecked ? ' record-row' : '');
+  row.className = 'item-row' + (isChecked ? ' checked-row' : '');
   row.dataset.iid = item.id;
   const checkInner = isChecked
     ? `<svg width="11" height="8" viewBox="0 0 11 8" fill="none">
@@ -3243,7 +3236,6 @@ function makeTodoRow(item, isChecked) {
     <div class="checkbox">${checkInner}</div>
     ${item.time ? `<span class="time-badge">${item.time}</span>` : ''}
     <span class="item-name">${item.name}</span>
-    ${item.isRecord && !isChecked ? '<span class="record-badge">기록</span>' : ''}
     ${!isChecked ? '<div class="item-drag-handle">⠿</div>' : ''}
   `;
   wrap.appendChild(row);
@@ -3302,7 +3294,7 @@ function renderTodoHistoryContent(list) {
     block.style.margin = '0 16px 2px';
     items.forEach(item => {
       const row = document.createElement('div');
-      row.className = 'item-row checked-row' + (item.isRecord ? ' record-row' : '');
+      row.className = 'item-row checked-row';
       row.innerHTML = `
         <div class="checkbox">
           <svg width="11" height="8" viewBox="0 0 11 8" fill="none">
@@ -3311,7 +3303,6 @@ function renderTodoHistoryContent(list) {
           </svg>
         </div>
         <span class="item-name">${item.name}</span>
-        ${item.isRecord ? '<span class="record-badge">기록</span>' : ''}
       `;
       block.appendChild(row);
     });
