@@ -2587,18 +2587,18 @@ function toggleCheck(itemId) {
   saveLists();
   renderDetail();
 
-  // 쇼핑하기 리스트의 모든 항목이 체크되면 택배 올 것에 자동 추가
-  if (currentListId === 'shopping' && list.items.length > 0 && list.items.every(i => i.checked)) {
-    const deliveryList = getList('delivery');
-    if (deliveryList) {
-      const existingNames = new Set(deliveryList.items.map(i => i.name));
-      const newItems = list.items
-        .filter(i => !existingNames.has(i.name))
-        .map(i => ({ id: `temp-${Date.now()}-${Math.random()}`, name: i.name, checked: false }));
-      if (newItems.length > 0) {
-        deliveryList.items.push(...newItems);
-        saveLists();
-        showToast('📦 쇼핑 완료! 택배 올 것에 자동 추가됐어요');
+  // 쇼핑하기 항목을 체크하면 택배 올 것에 자동 추가
+  if (currentListId === 'shopping') {
+    const checkedItem = list.items.find(i => i.id === itemId);
+    if (checkedItem && checkedItem.checked) {
+      const deliveryList = getList('delivery');
+      if (deliveryList) {
+        const alreadyExists = deliveryList.items.some(i => i.name === checkedItem.name);
+        if (!alreadyExists) {
+          deliveryList.items.push({ id: `temp-${Date.now()}`, name: checkedItem.name, checked: false });
+          saveLists();
+          showToast('📦 택배 올 것에 추가됐어요');
+        }
       }
     }
   }
