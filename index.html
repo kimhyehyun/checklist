@@ -2586,6 +2586,22 @@ function toggleCheck(itemId) {
   });
   saveLists();
   renderDetail();
+
+  // 쇼핑하기 리스트의 모든 항목이 체크되면 택배 올 것에 자동 추가
+  if (currentListId === 'shopping' && list.items.length > 0 && list.items.every(i => i.checked)) {
+    const deliveryList = getList('delivery');
+    if (deliveryList) {
+      const existingNames = new Set(deliveryList.items.map(i => i.name));
+      const newItems = list.items
+        .filter(i => !existingNames.has(i.name))
+        .map(i => ({ id: `temp-${Date.now()}-${Math.random()}`, name: i.name, checked: false }));
+      if (newItems.length > 0) {
+        deliveryList.items.push(...newItems);
+        saveLists();
+        showToast('📦 쇼핑 완료! 택배 올 것에 자동 추가됐어요');
+      }
+    }
+  }
 }
 
 function deleteItem(itemId) {
