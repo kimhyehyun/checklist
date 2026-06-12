@@ -250,7 +250,7 @@
       background: rgba(255,255,255,0.92);
       backdrop-filter: saturate(180%) blur(20px);
       -webkit-backdrop-filter: saturate(180%) blur(20px);
-      padding: 10px 16px 14px;
+      padding: 10px 16px 40px;
       border-top: 0.5px solid var(--sep-soft);
       flex-shrink: 0;
     }
@@ -1006,6 +1006,7 @@
       display: flex; gap: 8px; overflow-x: auto;
       padding: 16px 16px 14px; flex-shrink: 0;
       -webkit-overflow-scrolling: touch; scrollbar-width: none;
+      position: sticky; top: 0; z-index: 2; background: var(--bg);
     }
     .todo-date-bar::-webkit-scrollbar { display: none; }
     .tdc {
