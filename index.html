@@ -2130,7 +2130,10 @@ function renderHome() {
   const general  = lists.filter(l => l.type === 'general');
 
   function makeCard(list) {
-    const remaining = list.items.filter(i => !i.checked).length;
+    const todayStr = localDateStr(new Date());
+    const remaining = isTodoType(list.id)
+      ? list.items.filter(i => !i.checked && (i.todoDate || todayStr) === todayStr).length
+      : list.items.filter(i => !i.checked).length;
     const div = document.createElement('div');
     div.className = 'list-card';
     div.dataset.id = list.id;
@@ -2445,7 +2448,11 @@ function renderGeneralContent(list) {
       toggleCheck(item.id);
     });
     addLongPress(row, () => openEditSheet(item.id));
-    if (!isChecked) row.querySelector('.item-drag-handle').addEventListener('pointerdown', e => startItemDrag(e, item.id, row));
+    if (!isChecked) {
+      const handle = row.querySelector('.item-drag-handle');
+      handle.addEventListener('touchstart', e => { e.stopPropagation(); }, { passive: true });
+      handle.addEventListener('pointerdown', e => startItemDrag(e, item.id, row));
+    }
     const qtyEl = row.querySelector('[data-qid]');
     if (qtyEl) qtyEl.addEventListener('click', e => {
       e.stopPropagation(); openQtySheet(item.id);
@@ -3262,7 +3269,11 @@ function makeTodoRow(item, isChecked) {
     toggleCheck(item.id);
   });
   addLongPress(row, () => openEditSheet(item.id));
-  if (!isChecked) row.querySelector('.item-drag-handle').addEventListener('pointerdown', e => startItemDrag(e, item.id, row));
+  if (!isChecked) {
+    const handle = row.querySelector('.item-drag-handle');
+    handle.addEventListener('touchstart', e => { e.stopPropagation(); }, { passive: true });
+    handle.addEventListener('pointerdown', e => startItemDrag(e, item.id, row));
+  }
   addSwipeDelete(wrap, row, item.id);
   return wrap;
 }
@@ -3385,7 +3396,8 @@ function confirmDay(day) {
 function addLongPress(el, callback) {
   let timer = null;
   let didLongPress = false;
-  el.addEventListener('touchstart', () => {
+  el.addEventListener('touchstart', e => {
+    if (e.target.closest('.item-drag-handle')) return;
     didLongPress = false;
     timer = setTimeout(() => { didLongPress = true; callback(); }, 450);
   }, { passive: true });
